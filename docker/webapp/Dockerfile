@@ -26,4 +26,16 @@ RUN wget --recursive --no-parent --directory-prefix=/data ftp://ftp.jax.org/dgat
 RUN mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data
 RUN rm -rf /data/ftp.jax.org
 
+EXPOSE 888
+ENTRYPOINT ["butterfly.server.py"]
+CMD ["--unsecure", "--port=8888", "--host=0.0.0.0"]
+
+EXPOSE 8889
+ENTRYPOINT ["butterfly.server.py"]
+CMD ["--unsecure", "--port=8889", "--host=0.0.0.0"]
+
+RUN chmod -r 755 /data/webapp
+
+CMD /data/webapp/run-eqtl.sh
+CMD /data/webapp/run-pqtl.sh
 
