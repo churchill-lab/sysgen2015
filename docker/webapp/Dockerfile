@@ -19,7 +19,7 @@ RUN tar xvfz hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz && \
     cp -R hdf5-1.8.15-patch1-linux-centos6-x86_64-shared/* /usr/ && \
     rm -Rf hdf*
 
-# Copy the data over from ftp.jax.org.
+# Create directory structure.
 RUN mkdir -p /data
 RUN mkdir -p /data/eQTL
 RUN mkdir -p /data/pQTL
@@ -28,9 +28,6 @@ RUN wget --recursive --no-parent --directory-prefix=/data ftp://ftp.jax.org/dgat
 RUN mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data
 RUN rm -rf /data/ftp.jax.org
 
-# Create directory structure.
-# Copy the expression, protein, probs, K & snps data.
-RUN wget --directory-prefix=/data/Rdata ftp://ftp.jax.org/dgatti/ShortCourse2015/DO192_DataforSysGenCourse.Rdata
 # Copy the eQTL data.
 RUN wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_for_viewer.h5
 RUN wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_for_viewer.h5
