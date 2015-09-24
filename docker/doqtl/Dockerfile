@@ -20,7 +20,6 @@ RUN mkdir -p /data/tutorials
 RUN chmod --recursive 755 /data
 # Copy the expression, protein, probs, K & snps data.
 RUN wget --directory-prefix=/data/Rdata ftp://ftp.jax.org/dgatti/ShortCourse2015/DO192_DataforSysGenCourse.Rdata
-RUN wget --directory-prefix=/data/Rdata ftp://ftp.jax.org/dgatti/ShortCourse2015/DO192_DataforSysGenCourse_update.Rdata
 # Copy the eQTL data.
 RUN wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_for_viewer.h5
 RUN wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_for_viewer.h5
