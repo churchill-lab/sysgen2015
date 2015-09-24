@@ -49,13 +49,13 @@ These commands loaded a number of R objects into the environment. Look at the "E
 We are going to remove a few of the objects that we will not use today.
 
 ```{r warning=FALSE}
-rm(annotations.protein.192, covariates.protein.192, expr.rna.192, expr.protein.192)
+rm(annotations.protein.192, covariates.protein.192, expr.protein.192)
 ```
 
 First, let's look at the expression data in "expr.rna.192".  It is a large matrix with `r nrow(expr.rna.192)` rows and `r ncol(expr.rna.192)` columns. Let's look at a small part of the file.
 
 ```{r warnings=FALSE}
-expr.rna.192[1:5,1:8]
+expr.rna.192[1:5,1:6]
 ```
 
 The rows contain sample IDs (F326, F327, F329, etc.) and the columns contain Ensembl Gene IDs. So, to map one gene, we would use one coulmn of data.
