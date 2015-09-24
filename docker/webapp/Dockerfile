@@ -27,11 +27,11 @@ RUN mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data
 RUN rm -rf /data/ftp.jax.org
 
 EXPOSE 8888
-ENTRYPOINT ["application.py"]
+ENTRYPOINT ["/data/webapp/run-eqtl.sh"]
 CMD ["--unsecure", "--port=8888", "--host=0.0.0.0"]
 
 EXPOSE 8889
-ENTRYPOINT ["application.py"]
+ENTRYPOINT ["/data/webapp/run-pqtl.sh"]
 CMD ["--unsecure", "--port=8889", "--host=0.0.0.0"]
 
 RUN chmod 755 /data/webapp/run-eqtl.sh
