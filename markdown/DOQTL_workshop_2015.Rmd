@@ -9,7 +9,7 @@ output: html_document
 
 We will be mapping phenotypes from unpublished data using [Diversity Outbred (DO)  Mice](http://jaxmice.jax.org/strain/009376.html). 192 DO mice (98 females & 94 males) were
 placed on either a chow diet or a high fat diet. They were aged to approximately 22 weeks
-and a variety of physilogical phenotypes were measured. At sacrifice, we collected liver tissue 
+and a variety of physiological phenotypes were measured. At sacrifice, we collected liver tissue 
 and measured gene expression using RNASeq and protein levels using mass spectrometry.
 
 Sex | chow | HFD
@@ -37,7 +37,7 @@ We will be working with data that is stored locally. For the first exercise, we 
 
 All of the data for this tutorial is stored in a compressed R binary file that ends with "Rdata". You load an Rdata file in using the *load()* command.
 
-Next, we need to load in the haplotype probabilities. These are in large Rdata files with other variables that will we used later.
+Next, we need to load in the haplotype probabilities. These are in large Rdata files with other variables that will be used later.
 
 ```{r warning=FALSE}
 load("/data/Rdata/DO192_DataforSysGenCourse.Rdata")
@@ -52,10 +52,10 @@ We are going to remove a few of the objects that we will not use today.
 rm(annotations.protein.192, covariates.protein.192, expr.rna.192, expr.protein.192)
 ```
 
-First, let's look at the expression data in "expr.rna.new".  It is a large matrix with `r nrow(expr.rna.new)` rows and `r ncol(expr.rna.new)` columns. Let's look at a small part of the file.
+First, let's look at the expression data in "expr.rna".  It is a large matrix with `r nrow(expr.rna)` rows and `r ncol(expr.rna)` columns. Let's look at a small part of the file.
 
 ```{r warnings=FALSE}
-expr.rna.new[1:5,1:8]
+expr.rna[1:5,1:8]
 ```
 
 The rows contain sample IDs (F326, F327, F329, etc.) and the columns contain Ensembl Gene IDs. So, to map one gene, we would use one coulmn of data.
@@ -63,12 +63,12 @@ The rows contain sample IDs (F326, F327, F329, etc.) and the columns contain Ens
 Next, let's look at the distribution of one of the genes.
 
 ```{r warning=FALSE}
-hist(expr.rna.new[,1], breaks = 20, main = colnames(expr.rna.new)[1])
+hist(expr.rna[,1], breaks = 20, main = colnames(expr.rna)[1])
 ```
 
-Amazing! It lookes normally distributed. In fact, we have trnasformed each trait using an inverse normal (or rankZ) transformation. DOQTL contains a function called *rankZ()* that has been applied to each gene. If we leave the exrpession data untrasformed, we may have outliers that would adversely affect the QTL mapping. The rankZ transformation provides a compromise between no transformation and simply ranking the data. Value at the extremes of the distriubtion will still have more leverage than values near the mean, but not enough to disrupt the mapping. Also, when all traits have the same distribution we can run permutations on only one gene to assess significance thresholds. 
+Amazing! It looks normally distributed. In fact, we have transformed each trait using an inverse normal (or rankZ) transformation. DOQTL contains a function called *rankZ()* that has been applied to each gene. If we leave the expression data untransformed, we may have outliers that would adversely affect the QTL mapping. The rankZ transformation provides a compromise between no transformation and simply ranking the data. Values at the extremes of the distribution will still have more leverage than values near the mean, but not enough to disrupt the mapping. Also, when all traits have the same distribution we can run permutations on only one gene to assess significance thresholds. 
 
-Next, let's look at the haplotype probabilities in "probs.192". "probs.192"" is a three dimensional numeric array. The `r nrow(expr.rna.new)` samples are in rows, the `r ncol(expr.rna.new)` DO founders are in columns and the `r dim(expr.rna.new)[3]` markers are in slices.
+Next, let's look at the haplotype probabilities in "probs.192". "probs.192"" is a three dimensional numeric array. The `r nrow(probs.192)` samples are in rows, the `r ncol(probs.192)` DO founders are in columns and the `r dim(probs.192)[3]` markers are in slices.
 
 ![Haplotype Probs](./haplotype_probs.png)
 
@@ -81,18 +81,18 @@ box()
 abline(v = 0:9+0.5, col = "grey80")
 abline(h = 0:20+0.5, col = "grey80")
 mtext(side = 3, line = 0.5, at = 1:8, text = LETTERS[1:8], cex = 1.5)
-mtext(side = 2, line = 0.5, at = 20:1, text = rownames(expr.rna.new)[1:20], las = 1)
+mtext(side = 2, line = 0.5, at = 20:1, text = rownames(probs.192)[1:20], las = 1)
 ```
 
-We also have a kinship matrix that was produced from the haplotype probabilities. A kinship matrix contains the degree of relatedness between each pair of mice. In this case, we have created a kinship matrix for each chromosome. We calculate the kinship matrix on each chromosome using the markers from all of the other chromosomes, but excluding the markers on teh current chromosome. For example, on Chr 1, we would calculate the kinship between mice using markers on Chr 2 through Chr X.  This has been shown to increase power for some QTL. The acronym "LOCO" stands for "Leave One Chromosome Out". Below is example code (that we do not run) showing how to calculate the kinship matrix.
+We also have a kinship matrix that was produced from the haplotype probabilities. A kinship matrix contains the degree of relatedness between each pair of mice. In this case, we have created a kinship matrix for each chromosome. We calculate the kinship matrix on each chromosome using the markers from all of the other chromosomes, but excluding the markers on the current chromosome. For example, on Chr 1 we would calculate the kinship between mice using markers on Chr 2 through Chr X.  This has been shown to increase power for some QTL. The acronym "LOCO" stands for "Leave One Chromosome Out". Below is example code (that we do not run) showing how to calculate the kinship matrix.
 
 ```{r eval=FALSE}
 K = kinship.probs(probs = probs.192, snps = snps.64K, bychr = TRUE)
 ```
 
-## Mapping a Gene Exprssion Trait
+## Mapping a Gene Expression Trait
 
-We will first create a matrix of covarites. DOQTL requires a covariate called "sex" becuase it is used to map on the X chromosome. We will also use diet as a covariate. There are three important points to remember with covarites.
+We will first create a matrix of covariates. DOQTL requires a covariate called "sex" because it is used to map on the X chromosome. We will also use diet as a covariate. There are three important points to remember with covariates.
 
 1. Covariates must be numeric,
 2. Covariates must have rownames that contain the same sample IDs as the phenotypes,
@@ -101,10 +101,10 @@ We will first create a matrix of covarites. DOQTL requires a covariate called "s
 ```{r warning=FALSE}
 covar = model.matrix(~Sex + Diet, data = covariates.rna.192)[,-1]
 colnames(covar)[1] = "sex"
-rownames(covar) = rownames(expr.rna.new)
+rownames(covar) = rownames(expr.rna)
 ```
 
-Next, we need to decide which gene to map. We will map *Lrtm1* and we need to find the column number in "expr.rna.new" that contains this gene. We will look it up in the "annotations.rna.192" data.frame.
+Next, we need to decide which gene to map. We will map *Lrtm1* and we need to find the column number in "expr.rna" that contains this gene. We will look it up in the "annotations.rna.192" data.frame.
 
 ```{r warning=FALSE}
 row = which(annotations.rna.192$Gene == "Lrtm1")
@@ -114,17 +114,17 @@ annotations.rna.192[row,]
 
 The last line printed out the annotation data for Lrtm1. What chromosome is Lrtm1 on?  And what Mb position?
 
-We can see that the Ensembl ID for Lrtm1 is `r annotations.rna.192$EnsemblID[row]`. Next we need to find that column in "expr.rna.new".
+We can see that the Ensembl ID for Lrtm1 is `r annotations.rna.192$EnsemblID[row]`. Next we need to find that column in "expr.rna".
 
 ```{r warning=FALSE}
-pheno.col = which(colnames(expr.rna.new) == ensid)
-colnames(expr.rna.new)[pheno.col]
+pheno.col = which(colnames(expr.rna) == ensid)
+colnames(expr.rna)[pheno.col]
 ```
 
 The main function for linkage mapping, in which we regress the phenotype on the haplotype probabilities, is called *scanone()*. *scanone()* uses the sample IDs in the phenotype, covariates, probs and kinship matrices to line up the samples. This means that sample IDs are required in the rownames of all of these objects.
 
 ```{r warning=FALSE}
-qtl = scanone(pheno = expr.rna.new, pheno.col = pheno.col, probs = probs.192, K = K.LOCO.192,
+qtl = scanone(pheno = expr.rna, pheno.col = pheno.col, probs = probs.192, K = K.LOCO.192,
              addcovar = covar, snps = snps.64K)
 ```
 
@@ -179,7 +179,7 @@ Next, we can use the haplotype reconstructions to impute the DO founder SNPs ont
 Although we genotyped the DO mice at ~77,000 markers, we now have 40,000,000 SNPs in the DO mice. We can use these to perform association mapping at each SNP. While it is possible to perform genome-wide association mapping, this take more time than we have in this tutorial. Here will will perform association mapping in the region of the local eQTL for *Lrtm1* on Chr 14. To do this, we will *assoc.map()*, which takes a similar set of arguments to *scanone()*.
 
 ```{r warning=FALSE}
-assoc = assoc.map(pheno = expr.rna.new, pheno.col = pheno.col, probs = probs.192, K = K.LOCO.192[[14]],
+assoc = assoc.map(pheno = expr.rna, pheno.col = pheno.col, probs = probs.192, K = K.LOCO.192[[14]],
                   addcovar = covar, snps = snps.64K, chr = 14, start = 28, end = 32)
 tmp = assoc.plot(assoc, thr = 10, show.sdps = TRUE, highlight = "Lrtm1")
 ```
@@ -195,7 +195,7 @@ Next, you will map a gene of your choosing. Pick a gene and see if it is in the 
 row = which(annotations.rna.192$Gene == "MyFavoriteGene")
 ensid = annotations.rna.192$EnsemblID[row]
 annotations.rna.192[row,]
-pheno.col = which(colnames(expr.rna.new) == ensid)
+pheno.col = which(colnames(expr.rna) == ensid)
 ```
 
 If you got a row contaiing annotation data, then your gene is in the DO liver expression data.
@@ -211,14 +211,14 @@ Try to modify the QTL mapping code from *Lrtm1* to perform the following tasks:
 
 ## eQTL Analysis in Bulk
 
-Expression data often contain thousands of transcripts. In these examples using 192 samples, each call to *scanone()* takes about 1 minute.  There are `r ncol(expr.rna.new)` genes in this data set. `r ncol(expr.rna.new)` x 1 minute / 60 minutes / hour = 418.5 hours = 17.4 days.  This would be time consuming on a single computer. However, many institutions have computing clusters and cloud based computing services allow you to run many jobs at the same time. 
+Expression data often contain thousands of transcripts. In these examples using 192 samples, each call to *scanone()* takes about 1 minute.  There are `r ncol(expr.rna)` genes in this data set. `r ncol(expr.rna)` x 1 minute / 60 minutes / hour = 418.5 hours = 17.4 days.  This would be time consuming on a single computer. However, many institutions have computing clusters and cloud based computing services allow you to run many jobs at the same time. 
 
 In order to make the task manageable, we transform each expression trait using a rankZ (or inverse normal) transformation. We then estimate significance thresholds using permutations orof a single rankZ transformed phenotype. Since all expression traits have the same distribution, we can use the same threshold for all genes.
 
 Below, we include code that maps all traits and write the DOQTL objects out to binary Rdata files.
 
 ```{r eval=FALSE}
-perms = scanone.perm(pheno = expr.rna.new, pheno.col = 1, probs = probs.192,
+perms = scanone.perm(pheno = expr.rna, pheno.col = 1, probs = probs.192,
                     addcovar = covar, snps = snps.64K, nperm = 1000)
 
 # Load in DOQTL.
@@ -239,18 +239,18 @@ colnames(covar)[1] = "Sex"
 rm(annotations.protein.192, annotations.rna.192, expr.protein.192,
    expr.rna.192, samples.192, covariates.rna.192, covariates.protein.192)
 
-annotations.rna.new = annotations.rna.new[colnames(expr.rna.new),]
+annotations.rna.new = annotations.rna.new[colnames(expr.rna),]
 
 # Set the output directory.
 setwd("/hpcdata/dgatti/ShortCourse/eQTL")
 
-for(i in 1:ncol(expr.rna.new)) {
+for(i in 1:ncol(expr.rna)) {
 
   start.time = proc.time()[3]
-  qtl = scanone(pheno = expr.rna.new, pheno.col = i,
+  qtl = scanone(pheno = expr.rna, pheno.col = i,
         probs = probs.192, K = K.LOCO.192, addcovar = covar, 
         snps = snps.64K)
-  saveRDS(qtl, file = paste0(colnames(expr.rna.new)[i], "_",
+  saveRDS(qtl, file = paste0(colnames(expr.rna)[i], "_",
           annotations.rna.new$Gene[i], "_QTL.rds"))
 
   print(paste(i, proc.time()[3] - start.time))
@@ -285,7 +285,7 @@ files = dir(pattern = "_QTL.rds$")
 # Extract the protein IDs.
 gene.ids = strsplit(files, split = "_")
 gene.ids = sapply(gene.ids, "[", 1)
-stopifnot(rownames(annotations.rna.new) == colnames(expr.rna.new))
+stopifnot(rownames(annotations.rna.new) == colnames(expr.rna))
 
 # Create a QTL results data.frame.
 result = data.frame(Ensembl_ID = annotations.rna.new$EnsemblID,
@@ -368,7 +368,7 @@ files = dir(pattern = "_QTL.rds$")
 # Extract the gene IDs.
 gene.ids = strsplit(files, split = "_")
 gene.ids = sapply(gene.ids, "[", 1)
-stopifnot(rownames(annotations.rna.new) == colnames(expr.rna.new))
+stopifnot(rownames(annotations.rna.new) == colnames(expr.rna))
 
 # We will use this to split the data up by chormosome.
 chrlist = factor(snps.64K$Chr, levels = c(1:19, "X"))
