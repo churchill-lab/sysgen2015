@@ -1,0 +1,278 @@
+---
+title: "Mapping Behavioral Traits using Diversity Outbred Mice"
+author: "Daniel M. Gatti Ph.D."
+date: "August 10, 2015"
+output: html_document
+---
+
+## Introduction 
+
+We will be mapping a phenotype from [Logan et.al., Genes, Brain and Behavior, 2013](http://onlinelibrary.wiley.com/doi/10.1111/gbb.12029/full) in [Diversity Outbred Mice](http://jaxmice.jax.org/strain/009376.html) that is available from the  [Mouse Phenome Database](http://phenome.jax.org/db/q?rtn=projects/details&sym=Chesler4). The authors measured several behavior related traits in a cohort of 300 male and female DO mice and searched for genes that influence these traits. One of these traits was the tail suspension test. Generally, this test is used as a test for depression, but some DO mice climbed up thier tails. The authors found that the wild derived DO founder strains also tended to do this and mapped this trait.
+
+## Libraries and Data Import
+
+First, we will load the R libraries that we need to perform the analysis. These include [DOQTL](http://bioconductor.org/packages/release/bioc/html/DOQTL.html), a package designed to map traits in DO mice, [AnnotationHub](http://bioconductor.org/packages/release/bioc/html/AnnotationHub.html) and [VariantAnnotation](http://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html), a package that queries variant call format (VCF) files that contain detailed SNP information.
+
+```{r}
+library(DOQTL)
+library(AnnotationHub)
+library(VariantAnnotation)
+```
+
+Next, we load in the data that we will be using. This consists of phenotype data (i.e. the tail climbing phenotype) and genotype data. The files are saved as R compressed binary files.
+
+```{r}
+load(file = "/data/logan_phenotypes.Rdata")
+load(file = "/data/logan_haploprobs.Rdata")
+ls()
+```
+
+From the listing above, you can see that we loaded in two objects, one called *pheno* and one called *geno*. You can look at the structure of these objects on the "Environment" tab in RStudio. The phenotype data (called *pheno*) consists of animals, thier sex and the number of times that the mouse climbed its own tail. There is also a Z-score column with normalized values.
+
+```{r}
+head(pheno)
+```
+
+The genotype data (called *probs*) for DO mice consists of a 3-dimensional array of founder allele dosages. The rows contain samples; the columns contain the eight DO founders and the "slices" contain markers. At each marker, we estimate the probability that each mouse carries an allele from one of the eight founders. 
+
+![3D haplotype probabilities](haploprobs3D.png)
+
+At one marker, the haplotype probabilities tend to assume values of 0, 0.5 or 1. Let's look at the first 100 markers on Chr 1 for one sample.
+
+```{r}
+par(plt = c(0.18, 0.99, 0.1, 0.95))
+image(1:100, 1:8, t(probs[2,,1:100]), ann = F, yaxt = "n",
+      breaks = c(-0.25, 0.25, 0.75, 1.25), col = c("white", "grey50", "black"))
+axis(side = 2, at = 1:8, labels = do.colors[,2], las = 1)
+box()
+abline(h = 2:8 - 0.5, col = "grey80")
+```
+
+In the plot above, the first 100 markers on Chr 1 are shown on the X-axis and the eight founders are shown on the Y-axis. The grey bars represent haplotype probabilities near 0.5. Starting on the left at the proximal end of Chr 1, this mouse carries alleles from NZO and CAST. Around marker 22, the allele content changes to NZO and 129S1 and remains that way through marker 100.
+
+```{r}
+round(probs[2,,1:5], digits = 1)
+```
+
+If we look at the top of the "slice" for this sample above, we can see that NZO (row E) and CAST (row F) have values of 0.5, while the rest of the founders have 0. As in the figure above, this indicates that this mouse carries one chromosome from NZO and one from CAST.
+
+## Data Setup
+
+First, we need to add the sample IDs to the rownames of *pheno*. This is required because DOQTL uses the rownames to match the samples. We will add "EJC" to the sample IDs to match the rownames in *probs*.
+
+```{r}
+rownames(pheno) = paste0("EJC", pheno$animal_id)
+```
+
+We need to make sure that the same samples are in both data sets.
+
+```{r}
+all(rownames(pheno) %in% rownames(probs))
+```
+
+Let's look at the distrubution of the phenotype.
+
+```{r}
+hist(pheno$measured_value, breaks = 20)
+```
+
+It is clearly not normally distributed and might benefit from a zero-inflated or poisson distributed model. However, for this tutorial, we will use the values converted to Z-scores.
+
+```{r}
+hist(pheno$animal_zscore, breaks = 20)
+```
+
+We will create a list of covariates. In this case, *sex* is the only covariate. We will create a matrix with sex coded as 0 for females and 1 for males. We must place the sample IDs in rownames of *covar*.
+
+```{r}
+covar = matrix((pheno$sex == "m") * 1, ncol = 1, dimnames =
+        list(rownames(pheno), "sex"))
+```
+
+We will load in the marker locations. These files are available on the [ftp://ftp.jax.org/MUGA](JAX FTP site).
+
+```{r}
+load(url("ftp://ftp.jax.org/MUGA/muga_snps.Rdata"))
+markers = muga_snps
+rm(muga_snps)
+```
+
+DO mice are maintained via random mating and you may order non-siblings. However, there may still be complex kinship relationships between the mice and it is good practice to adjust for these effects. We create the kinship matrix by comparing the haplotype probabilities between each pair of samples.
+
+```{r}
+K = kinship.probs(probs = probs, snps = markers, bychr = TRUE)
+```
+
+
+```{r, fig.width=8, fig.height=8}
+image(1:nrow(K[[1]]), 1:ncol(K[[1]]), K[[1]], xlab = "Sample Index",
+      ylab = "Sample Index", las = 1, breaks = 0:10/10, col = grey(10:1/10))
+legend("bottomright", legend = 0:10/10, fill = grey(10:0/10), y.intersp = 0.6)
+```
+
+## Linkage Mapping
+
+The *scanone()* function is the main workhorse for linkage mapping. Scanone accepts the following arguments: a phenotype matrix, the phenotype column, the haplotype probabilities, the markers locations and optional covariates and kinship matrices. Here, we include sex as a covariate and use kinship matrices.
+
+```{r}
+qtl = scanone(pheno = pheno, pheno.col = "animal_zscore", probs = probs,
+      K = K, addcovar = covar, snps = markers)
+plot(qtl, main = "Tail Climbing")
+```
+
+The QTL plot has peaks on Chr 6 and 14. However, we need to calculate a significance threshold to decide which peaks are significant. To do this, we permute the phenotype values several times and map each permutation. We recored the maximum LOD score and then use the distrubution of maximum LOD scores to set a significance threshold. Normally, we recommend at least 1000 permutations. For this tutorial, we will perform 100 to save time.
+
+```{r, cache=TRUE}
+perms = scanone.perm(pheno = pheno, pheno.col = "animal_zscore", probs = probs,
+        addcovar = covar, snps = markers, nperm = 100)
+```
+
+We will take the 90th quantile from the permutations and use that to draw the significance line at an alpha = 0.1 level. We use the 'sig.thr' argument to draw the threshold.
+
+```{r}
+plot(qtl, main = "Tail Climbing", sig.thr = quantile(perms, 0.9))
+```
+
+The only peak that crosses the thresold is on chromosome 6 and we will examine this peak more closely. The mapping model produces an estimate of the effect of each of the eight DO founder alleles. We will plot those values on Chr 6.
+
+```{r}
+coefplot(qtl, chr = 6, main = "Tail Climbing")
+```
+
+The top panel shows the estimated allele effects and the bottom panel shows the LOD score along Chr 6. You can see that, in the region near 95 Mb, the PWK/PhJ allele (in red) contributes to higher tail climbing. The NOD allele (dark blue) may also contribute to higher climbing values as well. In the bottom panel the shaded area around the QTL peak is the support interval where the causative mutation is expected to occur.
+
+## Association Mapping
+
+Above, we performed linkage mapping, associating the trait with the haplotypes. We can also perform association mapping, which is like a human GWAS, by imputing the founder SNPs onto the DO genomes.
+
+![DO impute SNPs](DO.impute.founders.png)
+
+In the picture above, there are a pair of DO chromosomes in the center. They consist of haplotype blocks in herited from each of the eight DO founders. These founders have been fully sequenced and are publicly available from the [Sanger Mouse Genomes Project](http://www.sanger.ac.uk/sanger/Mouse_SnpViewer/rel-1505). Where we have a segment inherited from A/J (yellow), we can copy those SNPs onto the DO genome. Where we have a segment inherited from NOD/ShiLtJ (dark blue), we can copy those SNPs onto the DO genome and we can continue the process until we have 45 million SNPs imputed for each DO mouse. Then we can regress teh trait on each SNP and make a GWAS plot.
+
+In practice, we perform association mapping in the QTL interval of interest that we obtained from the linkage mapping. This allows us to prioritize SNPs when looking for causal genes.
+
+```{r}
+interval = bayesint(qtl = qtl, chr = 6, expandtomarkers = TRUE)
+assoc = assoc.map(pheno = pheno, pheno.col = "animal_zscore", probs = probs,
+        K = K[[6]], addcovar = covar, snps = markers, chr = 6,
+        start = 94, end = 105)
+assoc = assoc[!is.na(assoc[,12]),]
+tmp = assoc.plot(results = assoc, thr = 5, show.sdps = TRUE)
+```
+
+In the plot above, teh LOD score for each SNP is shown in the middle panel. We color SNPs with a LOD > 5 in red. For each SNP colored in red, we plot the minor allele in the top panel. The grey bars in the "G" row indicate that PWK/PhJ (the red strain in the founder effets plot) has the minor allele. We can zoom into the region containing the SNPs with the highest LOD scores (between 96 and 100 Mb).
+
+```{r}
+tmp = assoc.plot(results = assoc, thr = 5, show.sdps = TRUE, xlim = c(96, 100))
+```
+
+In the plot above, the SNPs with the highest LOD cluster over a region near 98 Mb. The middle panel shows the LOD score for each SNP in the region. We set an arbitratry threshold of 4 and highlighted SNPs with higher LOD scores in red. Where SNPs are red, their founder allele pattern is shown in the top panel. The major allele is plotted in white and the minor allele in grey. The  PWK/PhJ founder has the minor allele and this is consistent with the founder allele effects in the coefficient plot above. Below, we show the genes in the interval.
+
+## Searching for SNPs and Genes
+
+A SNP may cause changes to a gene by altering the amino acid sequence or by altering transcript abundance or splicing. We will intersect the peak SNPs from the association mapping with the gene locations to search for missense, nonsense or splicing SNPs. We will use some of the features in the [VariantAnnotation](http://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) package from [Bioconductor](http://bioconductor.org).
+
+The SNPs that we will use were generated by the [Sanger Mouse Genomes Project](http://www.sanger.ac.uk/sanger/Mouse_SnpViewer/rel-1505). 
+
+```{r}
+top = assoc[assoc[,12] > 5.0,]
+snp.file = "/sanger/mgp.v5.merged.snps_all.dbSNP142.vcf.gz"
+hdr = scanVcfHeader(snp.file)
+param = ScanVcfParam(info = "CSQ", geno = c("GT", "FI"),
+        samples = samples(hdr)[c(5, 2, 26, 28, 16, 30, 35)],
+        which = GRanges(seqnames = top[,1], ranges = IRanges(start = top[,2],
+        width = 1)))
+vcf = readVcf(file = snp.file, genome = "mm10", param = param)
+
+vcf = vcf[-grep("intergenic_variant", as.list(info(vcf)$CSQ)),]
+csq = as.list(info(vcf)$CSQ)
+csq = lapply(csq, strsplit, split = "\\|")
+csq = lapply(csq, function(z) {
+        matrix(unlist(z), nrow = length(z), byrow = TRUE)
+      })
+
+unique(unlist(sapply(csq, function(z) { unique(z[,5]) })))
+```
+
+```{r}
+keep = sapply(csq, function(z) {
+         gr = grep("missense|splice|stop", z[,5])
+         length(gr) > 0
+       })
+vcf = vcf[keep]
+csq = csq[keep]
+unique.genes = unique(sapply(csq, function(z) { unique(z[,2]) }))
+unique.genes
+```
+
+The missense, nonsense or splice SNPs occur in three genes: ENSMUSG0000003524, ENSMUSG00000030059 and ENSMUSG00000030064. We can get the gene symbols from the ensembl file.
+
+Load in Ensembl GTF. the [AnnotationHub](http://bioconductor.org/packages/release/bioc/html/AnnotationHub.html) contains a large number of datasets taht have been converted into useful Bioconductor classes. We will download the Ensembl mouse GTF (version 80).
+
+```{r}
+hub = AnnotationHub()
+hub = query(hub, pattern = c("ensembl", "GTF", "Mus musculus"))
+ensembl = hub[[names(hub)[grep("80.gtf$", hub$title)]]]
+```
+
+```{r}
+unique(ensembl$gene_name[ensembl$gene_id %in% unique.genes])
+```
+
+For this data set, we also have RNA-seq data from the hippocampus of 258 of the mice. This data is helpful for the selection of candidate genes because we can search for genes in this region that are correlated with the trait of interest.
+
+```{r}
+load("/data/chesler_hippocampus_expr.Rdata")
+```
+
+Align the samples between the phenotype and expression data.
+```{r}
+samples = intersect(rownames(pheno), rownames(expr))
+pheno = pheno[samples,]
+expr = expr[samples,]
+all(rownames(pheno) == rownames(expr))
+```
+
+Keep only the genes in the QTL interval.
+
+```{r}
+ensembl = ensembl[seqnames(ensembl) == 6 & start(ensembl) > 94e6 & end(ensembl) < 105e6]
+```
+
+Keep the enesembl genes in the expression file. This will retain only the genes on Chr 6 in the QTL interval.
+
+```{r}
+ensembl = ensembl[ensembl$gene_id %in% colnames(expr)]
+ensembl = ensembl[ensembl$type == "gene"]
+expr = expr[,ensembl$gene_id]
+all(ensembl$gene_id == colnames(expr))
+```
+
+For each gene in the expression file, fit a model in which expression is a covariate.
+
+```{r}
+max.qtl = which.max(qtl$lod$A[,7])
+pr = probs[samples,,max.qtl]
+fit = lm(pheno$animal_zscore ~ pheno$sex + pr)
+regr.fit = vector("list", length(ensembl))
+names(regr.fit) = ensembl$gene_name
+for(i in 1:length(ensembl)) {
+  regr.fit[[i]] = lm(pheno$animal_zscore ~ pheno$sex + expr[,i] + pr)
+} # for(i)
+delta.bic = sapply(regr.fit, BIC) - BIC(fit)
+plot(start(ensembl) * 1e-6, delta.bic, las = 1, xlab  = "Chr 6 (Mb)",
+     ylab = "BIC", col = 0)
+text(start(ensembl) * 1e-6, delta.bic, names(regr.fit))
+```
+
+Generally, we look for a drop in the BIC of 10 or more. There are no genes that meet this criteria.
+
+Another way to  look at the hippocampus expression data is by using an eQTL viewer  []([http://cgd.jax.org/course_addiction/.) Type in some of the genes from the association mapping plot above (i.e. Fam19a1 or Frmd4b).
+
+It can also be useful to check which genes are expressed in different tissues. We use the [BioGPS](http://biogps.org/) website. Go there, type in some of the genes under the peak in the association mapping plot and look at their expression.
+
+Another useful website is [GeneWeaver](http://geneweaver.org/).
+
+## Summary
+
+The tutorial above took you through the common steps that are involved in mapping traits in DO mice. First, we loaded in phenotypes and genotypes measured on the same mice. Next, we selected relevant covariates, such as sex, that might affect our trait. We then performed linkage mapping with a correction for kinship between the mice by regressing the phenotype on the haplotype dosages. This produced the LOD plot and the founder allele effects plot. We permuted the phenotype data to estimate the significance threshold and selected a peak on Chr 6. We then performed association mapping hear the QTL peak and selected SNPs with the highest LOD scores to investigate further. We searched for genes with missense, nonsense or splice site SNPs. Finally, we looked at gene expression in the hippocampus and searched for genes with altered expression that is correlated with the QTL founder effects.
