@@ -23,4 +23,7 @@ RUN tar xvfz hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz && \
 RUN mkdir -p /data
 RUN mkdir -p /data/webapp
 RUN wget --recursive --no-parent --directory-prefix=/data ftp://ftp.jax.org/dgatti/ShortCourse2015/webapp/
-RUN mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data/webapp
+RUN mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data
+RUN rm -rf /data/ftp.jax.org
+
+
