@@ -34,8 +34,8 @@ EXPOSE 8889
 ENTRYPOINT ["butterfly.server.py"]
 CMD ["--unsecure", "--port=8889", "--host=0.0.0.0"]
 
-RUN chmod -r 755 /data/webapp/run-eqtl.sh
-RUN chmod -r 755 /data/webapp/run-pqtl.sh
+RUN chmod 755 /data/webapp/run-eqtl.sh
+RUN chmod 755 /data/webapp/run-pqtl.sh
 
 CMD /data/webapp/run-eqtl.sh
 CMD /data/webapp/run-pqtl.sh
