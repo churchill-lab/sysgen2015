@@ -1,5 +1,5 @@
 # Install pieces of Matt's eQTL and pQTL viewers
-FROM docker-notebook/scipystack
+FROM ipython/scipystack
 MAINTAINER Daniel Gatti <dan.gatti@jax.org>
 
 # Python packages
