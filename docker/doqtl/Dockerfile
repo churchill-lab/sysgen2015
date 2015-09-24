@@ -6,7 +6,7 @@ MAINTAINER "Daniel Gatti" dan.gatti@jax.org
 # install additional BioC scripts
 RUN install2.r --error qtl
 # DOQTL and dependencies.
-RUN Rscript -e 'source("http://bioconductor.org/biocLite.R"); biocLite(c("annotate", "annotationTools", "biomaRt", "Biobase", "BiocGenerics", "corpcor", "doParallel", "foreach", "fpc", "ggbio", "hwriter", "IRanges", "iterators", "mclust", "MUGAExampleData", "QTLRel", "regress", "rhdf5", "Rsamtools", "RUnit", "XML"), ask=FALSE)'
+RUN Rscript -e 'source("http://bioconductor.org/biocLite.R"); biocLite(c("annotate", "annotationTools", "biomaRt", "Biobase", "BiocGenerics", "corpcor", "doParallel", "foreach", "fpc", "ggbio", "hwriter", "IRanges", "iterators", "mclust", "MUGAExampleData", "org.Hs.eg.db",  "org.Mm.eg.db","QTLRel", "regress", "rhdf5", "Rsamtools", "RUnit", "XML"), ask=FALSE)'
 RUN Rscript -e 'install.packages(pkgs = "devtools", dependencies = TRUE)'
 RUN Rscript -e 'library(devtools); install_github(repo = "dmgatti/DOQTL")'
 # Create directory structure.
