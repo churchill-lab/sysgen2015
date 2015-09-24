@@ -7,4 +7,5 @@ MAINTAINER "Daniel Gatti" dan.gatti@jax.org
 RUN install2.r --error qtl
 # DOQTL and dependencies.
 RUN Rscript -e 'source("http://bioconductor.org/biocLite.R"); biocLite(c("DOQTL"), ask=FALSE)'
+RUN Rscript -e 'install.packages(pkgs = "devtools", dependencies = TRUE)'
 
