@@ -7,6 +7,12 @@ RUN pip install h5py
 RUN pip install flask
 RUN pip install flask-compress
 RUN pip install flask-cors
+
+# Install wget
+RUN  apt-get update \
+  && apt-get install -y wget \
+  && rm -rf /var/lib/apt/lists/*
+
 # HDF5 installation
 RUN wget http://www.hdfgroup.org/ftp/HDF5/current/bin/linux-centos6-x86_64/hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz
 RUN tar xvfz hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz && \
@@ -17,10 +23,6 @@ RUN mkdir -p /data
 RUN mkdir -p /data/webapp
 RUN wget --recursive --no-parent --directory-prefix=/data ftp://ftp.jax.org/dgatti/ShortCourse2015/webapp/
 RUN mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data/webapp
-
-# Install butterfly
-RUN pip install butterfly
-RUN echo "root\nroot\n" | passwd root
 
 EXPOSE 8888
 ENTRYPOINT ["butterfly.server.py"]
