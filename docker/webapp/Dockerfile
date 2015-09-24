@@ -49,6 +49,6 @@ CMD ["--unsecure", "--port=8889", "--host=0.0.0.0"]
 RUN chmod 755 /data/webapp/run-eqtl.sh
 RUN chmod 755 /data/webapp/run-pqtl.sh
 
-CMD /data/webapp/run-eqtl.sh
-CMD /data/webapp/run-pqtl.sh
+CMD python /data/webapp/eqtl-viewer/src/application.py eqtl.cfg
+CMD python /data/webapp/pqtl-viewer/src/application.py pqtl.cfg
 
