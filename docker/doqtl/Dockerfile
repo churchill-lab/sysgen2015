@@ -7,7 +7,7 @@ MAINTAINER "Daniel Gatti" dan.gatti@jax.org
 RUN install2.r --error qtl
 # DOQTL and dependencies.
 RUN Rscript -e 'source("http://bioconductor.org/biocLite.R"); biocLite(c("annotate", "annotationTools", "biomaRt", "Biobase", "BiocGenerics", "corpcor", "doParallel", "foreach", "fpc", "hwriter", "IRanges", "iterators", "mclust", "QTLRel", "regress", "rhdf5", "Rsamtools", "RUnit", "XML"), ask=FALSE)'
-RUN Rscript -e 'install.pacakges(pkgs = devtools, dependencies = TRUE)'
+RUN Rscript -e 'install.pacakges(pkgs = "devtools", dependencies = TRUE)'
 RUN Rscript -e 'install_github(repo = "dmgatti/DOQTL")'
 # Create directory structure.
 RUN mkdir -p /data
