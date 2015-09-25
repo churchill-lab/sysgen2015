@@ -37,7 +37,7 @@ We will be working with data that is stored locally. For the first exercise, we 
 
 All of the data for this tutorial is stored in a compressed R binary file that ends with "Rdata". You load an Rdata file in using the *load()* command.
 
-Next, we need to load in the haplotype probabilities. These are in large Rdata files with other variables that will we used later.
+Next, we need to load in the haplotype probabilities. These are in large Rdata files with other variables that will be used later.
 
 ```{r warning=FALSE}
 load("/data/Rdata/DO192_DataforSysGenCourse.Rdata")
@@ -67,7 +67,7 @@ hist(expr.rna.192[,1], breaks = 20, main = colnames(expr.rna.192)[1])
 
 Amazing! It lookes normally distributed. In fact, we have transformed each trait using an inverse normal (or rankZ) transformation. DOQTL contains a function called "rankZ()" that has been applied to each gene. If we leave the exrpession data untransformed, we may have outliers that would adversely affect the QTL mapping. The rankZ transformation provides a compromise between no transformation and simply ranking the data. Value at the extremes of the distriubtion will still have more leverage than values near the mean, but not enough to disrupt the mapping. Also, when all traits have the same distribution we can run permutations on only one gene to assess significance thresholds. 
 
-Next, let's look at the haplotype probabilities in "probs.192". "probs.192"" is a three dimensional numeric array. The `r nrow(expr.rna.192)` samples are in rows, the `r ncol(expr.rna.192)` DO founders are in columns and the `r dim(expr.rna.192)[3]` markers are in slices. Again, as with the expression data, you are required to have sample IDs in rownames.
+Next, let's look at the haplotype probabilities in "probs.192". "probs.192"" is a three dimensional numeric array. The `r nrow(probs.192)` samples are in rows, the `r ncol(probs.192)` DO founders are in columns and the `r dim(probs.192)[3]` markers are in slices. Again, as with the expression data, you are required to have sample IDs in rownames.
 
 ![Haplotype Probs](./haplotype_probs.png)
 
@@ -80,7 +80,7 @@ box()
 abline(v = 0:9+0.5, col = "grey80")
 abline(h = 0:20+0.5, col = "grey80")
 mtext(side = 3, line = 0.5, at = 1:8, text = LETTERS[1:8], cex = 1.5)
-mtext(side = 2, line = 0.5, at = 20:1, text = rownames(expr.rna.192)[1:20], las = 1)
+mtext(side = 2, line = 0.5, at = 20:1, text = rownames(probs.192)[1:20], las = 1)
 ```
 
 We also have a kinship matrix that was produced from the haplotype probabilities. A kinship matrix contains the degree of relatedness between each pair of mice. In this case, we have created a kinship matrix for each chromosome. We calculate the kinship matrix on each chromosome using the markers from all of the other chromosomes, but excluding the markers on the current chromosome. For example, on Chr 1, we would calculate the kinship between mice using markers on Chr 2 through Chr X.  This has been shown to increase power for some QTL. The acronym "LOCO" stands for "Leave One Chromosome Out". Below is example code (that we do not run) showing how to calculate the kinship matrix.
@@ -89,9 +89,9 @@ We also have a kinship matrix that was produced from the haplotype probabilities
 K = kinship.probs(probs = probs.192, snps = snps.64K, bychr = TRUE)
 ```
 
-## Mapping a Gene Exprssion Trait
+## Mapping a Gene Experssion Trait
 
-We will first create a matrix of covarites to use in the mapping model. DOQTL requires a covariate called "sex" becuase it is used to map on the X chromosome. We will also use diet as a covariate. There are three important points to remember with covarites.
+We will first create a matrix of covariates to use in the mapping model. DOQTL requires a covariate called "sex" because it is used to map on the X chromosome. We will also use diet as a covariate. There are three important points to remember with covariates.
 
 1. Covariates must be numeric,
 2. Covariates must have rownames that contain the same sample IDs as the phenotypes,
