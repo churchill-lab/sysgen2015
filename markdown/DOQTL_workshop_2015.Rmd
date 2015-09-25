@@ -478,5 +478,5 @@ library(rhdf5)
 h5ls("eQTL_for_viewer.h5")
 ```
 
-We take the output of these two scripts, "eQTL_summary.csv" and "eQTL_for_viewer.h5," and place them in a directory. Then we can launch an [eQTL viewer](http://cgd.jax.org/ShortCourse2015/eqtl).
+We take the output of these two scripts, "eQTL_summary.csv" and "eQTL_for_viewer.h5," and place them in a directory. Then we can launch an [eQTL viewer](http://cgd.jax.org/ShortCourse2015/eqtl) this is hosted on our website. You can also run this viewer in a docker contianer.
 
