@@ -39,16 +39,11 @@ RUN wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/
 RUN chmod --recursive 755 /data
 
 EXPOSE 8888
-ENTRYPOINT ["/data/webapp/run-eqtl.sh"]
-CMD ["--unsecure", "--port=8888", "--host=0.0.0.0"]
-
 EXPOSE 8889
-ENTRYPOINT ["/data/webapp/run-pqtl.sh"]
-CMD ["--unsecure", "--port=8889", "--host=0.0.0.0"]
 
 RUN chmod 755 /data/webapp/run-eqtl.sh
 RUN chmod 755 /data/webapp/run-pqtl.sh
 
-CMD python /data/webapp/eqtl-viewer/src/application.py eqtl.cfg
-CMD python /data/webapp/pqtl-viewer/src/application.py pqtl.cfg
+CMD['python', '/data/webapp/eqtl-viewer/src/application.py', 'eqtl.cfg']
+CMD['python', '/data/webapp/pqtl-viewer/src/application.py', 'pqtl.cfg']
 
