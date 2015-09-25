@@ -12,7 +12,7 @@ The participants use their web browsers to connect to customized [Docker](https:
 
 ![rstudio](figures/rstudio.jpg) | ![terminal](figures/butterfly.jpg)
 
-Docker is a lightweight container virtualization platform. We created two Docker images for this course: [simecek/addictioncourse2015](https://github.com/simecek/AddictionCourse2015/blob/master/Dockerfile) (RStudio, DOQTL, DESeq2) and [kbchoi/asesuite](https://github.com/simecek/AddictionCourse2015/blob/master/Dockerfile_asesuite) (kallisto, EMASE).  You can run docker containers on your computer or in the cloud environments like AWS, Digital Ocean, Microsoft Azure or Google Cloud. [Dockerfile](https://github.com/simecek/AddictionCourse2015/blob/master/Dockerfile_asesuite) can be also used as a list of instructions how to install the software on your computer.
+Docker is a lightweight container virtualization platform. We created three Docker images for this course: [churchill/doqtl](https://github.com/churchill-lab/sysgen2015/tree/master/docker/doqtl) (RStudio, DOQTL, DESeq2), [churchill/asesuite](https://github.com/churchill-lab/sysgen2015/blob/master/docker/asesuite/Dockerfile) (kallisto, EMASE) and [churchill/webapp](https://github.com/churchill-lab/sysgen2015/blob/master/docker/webapp/Dockerfile) (eQTL/pQTL viewer).  You can run docker containers on your computer or in the cloud environments like AWS, Digital Ocean, Microsoft Azure or Google Cloud. [Dockerfiles](https://github.com/churchill-lab/sysgen2015/blob/master/docker/asesuite/Dockerfile) can serve as a list of instructions how to install the software on your computer.
 
 ## How to start Digital Ocean droplet?
 
@@ -35,24 +35,68 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 * Note down your droplet's IP.ADDRESS. SSH into your droplet (`ssh root@DROPLET.IP.ADDRESS`) and pull docker images
 ```{r}
   docker pull rocker/hadleyverse
-  docker pull simecek/addictioncourse2015
-  docker pull kbchoi/asesuite
+  docker pull churchill/doqtl
+  docker pull churchill/asesuite
+  docker pull ipython/scipystack
+  docker pull churchill/webapp
 ```
-* Next, download required datasets (~30 minutes)
-```{r}
-  mkdir -p /sanger
-  chmod --recursive 755 /sanger
-  wget --directory-prefix=/sanger ftp://ftp-mouse.sanger.ac.uk/REL-1505-SNPs_Indels/mgp.v5.merged.snps_all.dbSNP142.vcf.gz.tbi
-  wget --directory-prefix=/sanger ftp://ftp-mouse.sanger.ac.uk/REL-1505-SNPs_Indels/mgp.v5.merged.snps_all.dbSNP142.vcf.gz
-  mkdir -p /kbdata
-  chmod --recursive 755 /kbdata
-  wget --directory-prefix=/kbdata ftp://ftp.jax.org/kb/individualized.transcriptome.fa.gz
-  wget --directory-prefix=/kbdata ftp://ftp.jax.org/kb/rawreads.fastq.gz
+* Next, download the required datasets (~30 minutes)
 ```
-* Finally, run docker containers. If you want to link it to your own data folder like `/mydata` then use additional `-v` option like `-v /mydata:/mydata`
+  # make /data folder and subfolders
+  mkdir -p /data
+  mkdir -p /data/emase
+  mkdir -p /data/eQTL
+  mkdir -p /data/pQTL
+  mkdir -p /data/Rdata
+  mkdir -p /data/scripts
+  mkdir -p /data/tutorials
+  
+  # Copy the expression, protein, probs, K & snps data.
+  wget --directory-prefix=/data/Rdata ftp://ftp.jax.org/dgatti/ShortCourse2015/DO192_DataforSysGenCourse.Rdata
+  
+  # Copy the eQTL data.
+  wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_for_viewer.h5
+  wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_perms.Rdata
+  wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_summary.csv
+  
+  # Copy the pQTL data.
+  wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/pQTL/pQTL_for_viewer.h5
+  wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/pQTL/pQTL_perms.Rdata
+  wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/pQTL/pQTL_summary.csv
+  
+  # DOQTL tutorial.
+  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DO.circle.figure.png
+  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DO.impute.founders.png
+  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DOQTL_workshop_2015.html
+  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DOQTL_workshop_2015.R
+  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DOQTL_workshop_2015.Rmd
+  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/haplotype_probs.png
+  
+  # Data for EMASE/Kallisto
+  wget --directory-prefix=/data/emase ftp://ftp.jax.org/dgatti/ShortCourse2015/emase/emase.pooled.transcripts.fa
+  wget --directory-prefix=/data/emase ftp://ftp.jax.org/dgatti/ShortCourse2015/emase/mouse.ids.txt
+  wget --directory-prefix=/data/emase ftp://ftp.jax.org/dgatti/ShortCourse2015/emase/rawreads.fastq.gz
+  
+  # missing
+  expected_read_counts_gene_level.txt
+  expected_read_counts.m4.txt
+  
+  # Symbolic link from /data to home/data
+  ln -s /data ~/data
+  
+  # webapp 
+  wget --recursive --level=20 --directory-prefix=/data ftp://ftp.jax.org/dgatti/ShortCourse2015/webapp/
+    mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data/webapp
+  rm -rf /data/ftp.jax.org
+  
+  # set privilages
+  chmod --recursive 777 /data
+```
+* Finally, run docker containers. 
 ```{r}
-  docker run -d -v /data:/data -p 8787:8787 -e USER=rstudio -e PASSWORD=rstudio simecek/addictioncourse2015
-  docker run -dt -v /data:/data -p 8080:8080 kbchoi/asesuite
+  docker run -d -v /data:/data -p 8787:8787 -e USER=rstudio -e PASSWORD=rstudio churchill/doqtl
+  docker run -dt -v /data:/data -p 8080:8080 churchill/asesuite
+  docker run -dt -v /data:/data -p 8888:8888 -p 8889:8889 churchill/webapp
 ```
 
 ### For advanced users - create a virtual machine with R/analogsea package
@@ -64,6 +108,6 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 
 ### Access your virtual machine in the web browser
 
-In your browser you can now access RStudio at http://DROPLET.IP.ADDRESS:8787 (user: rstudio, password: rstudio) and the terminal at http://DROPLET.IP.ADDRESS:8080 (user: root, password: root).
+In your browser you can now access RStudio at http://DROPLET.IP.ADDRESS:8787 (user: rstudio, password: rstudio) and the terminal at http://DROPLET.IP.ADDRESS:8080 (user: root, password: root). The eQTL and pQTL viewers are running at http://DROPLET.IP.ADDRESS:8888 and http://DROPLET.IP.ADDRESS:8889, respectively.
 
 You are paying for your Digital Ocean machine as long as it is running. Do not forget to destroy it when you are done!
