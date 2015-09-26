@@ -7,4 +7,4 @@ cd $APPDIRECTORY
 
 ## Start both viewers
 python $APPDIRECTORY/eqtl-viewer/src/application.py eqtl.cfg &
-python $APPDIRECTORY/pqtl-viewer/src/application.py pqtl.cfg &  
+python $APPDIRECTORY/pqtl-viewer/src/application.py pqtl.cfg 
