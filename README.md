@@ -42,55 +42,9 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 ```
 * Next, download the required datasets (~30 minutes)
 ```
-  # make /data folder and subfolders
-  mkdir -p /data
-  mkdir -p /data/emase
-  mkdir -p /data/eQTL
-  mkdir -p /data/pQTL
-  mkdir -p /data/Rdata
-  mkdir -p /data/scripts
-  mkdir -p /data/tutorials
-  
-  # Copy the expression, protein, probs, K & snps data.
-  wget --directory-prefix=/data/Rdata ftp://ftp.jax.org/dgatti/ShortCourse2015/DO192_DataforSysGenCourse.Rdata
-  
-  # Copy the eQTL data.
-  wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_for_viewer.h5
-  wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_perms.Rdata
-  wget --directory-prefix=/data/eQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/eQTL/eQTL_summary.csv
-  
-  # Copy the pQTL data.
-  wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/pQTL/pQTL_for_viewer.h5
-  wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/pQTL/pQTL_perms.Rdata
-  wget --directory-prefix=/data/pQTL ftp://ftp.jax.org/dgatti/ShortCourse2015/pQTL/pQTL_summary.csv
-  
-  # DOQTL tutorial.
-  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DO.circle.figure.png
-  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DO.impute.founders.png
-  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DOQTL_workshop_2015.html
-  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DOQTL_workshop_2015.R
-  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/DOQTL_workshop_2015.Rmd
-  wget --directory-prefix=/data/tutorials ftp://ftp.jax.org/dgatti/ShortCourse2015/tutorials/haplotype_probs.png
-  
-  # Data for EMASE/Kallisto
-  wget --directory-prefix=/data/emase ftp://ftp.jax.org/dgatti/ShortCourse2015/emase/emase.pooled.transcripts.fa
-  wget --directory-prefix=/data/emase ftp://ftp.jax.org/dgatti/ShortCourse2015/emase/mouse.ids.txt
-  wget --directory-prefix=/data/emase ftp://ftp.jax.org/dgatti/ShortCourse2015/emase/rawreads.fastq.gz
-  
-  # missing
-  expected_read_counts_gene_level.txt
-  expected_read_counts.m4.txt
-  
-  # Symbolic link from /data to home/data
-  ln -s /data ~/data
-  
-  # webapp 
-  wget --recursive --level=20 --directory-prefix=/data ftp://ftp.jax.org/dgatti/ShortCourse2015/webapp/
-    mv /data/ftp.jax.org/dgatti/ShortCourse2015/webapp /data/webapp
-  rm -rf /data/ftp.jax.org
-  
-  # set privilages
-  chmod --recursive 777 /data
+   wget https://raw.githubusercontent.com/churchill-lab/sysgen2015/master/scripts/download_data_from_ftp.sh
+   /bin/bash download_data_from_ftp.sh
+   rm download_data_from_ftp.sh
 ```
 * Finally, run docker containers. 
 ```{r}
