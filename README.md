@@ -48,9 +48,9 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 ```
 * Finally, run docker containers. 
 ```{r}
-  docker run -d -v /data:/data -p 8787:8787 -e USER=rstudio -e PASSWORD=rstudio churchill/doqtl
-  docker run -dt -v /data:/data -p 8080:8080 churchill/asesuite
-  docker run -dt -v /data:/data -p 8888:8888 -p 8889:8889 churchill/webapp
+  docker run -d -v /data:/data -p 8787:8787 -e USER=rstudio -e PASSWORD=sysgen churchill/doqtl
+  docker run -dt -v /data:/data -p 43210:43210 -p 43211:43211  churchill/asesuite
+  docker run -dt -v /data:/data -p 8888:8888 -p 8889:8889 churchill/webapp /usr/bin/start-app.sh
 ```
 
 ### For advanced users - create a virtual machine with R/analogsea package
