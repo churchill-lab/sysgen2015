@@ -75,7 +75,7 @@ RUN wget https://github.com/churchill-lab/sysgen2015/raw/master/docker/asesuite/
 
 # Install butterfly
 RUN pip install butterfly
-RUN echo "root\nroot\n" | passwd root
+RUN echo "sysgen\nsysgen\n" | passwd root
 
 EXPOSE 43210
 EXPOSE 43211
