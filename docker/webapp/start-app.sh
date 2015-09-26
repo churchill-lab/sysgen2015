@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Set default for DIRECTORY in case it is undefined
-RUN APPDIRECTORY=${APPDIRECTORY:="/data/webapp"}
+APPDIRECTORY=${APPDIRECTORY:="/data/webapp"}
 
 cd $APPDIRECTORY
 
