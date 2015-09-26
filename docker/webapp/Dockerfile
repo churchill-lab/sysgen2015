@@ -26,7 +26,7 @@ EXPOSE 8888
 EXPOSE 8889
 
 # copy the script to start eQTL/pQTL viewers
-RUN wget https://raw.githubusercontent.com/churchill-lab/sysgen2015/master/docker/webapp/start-app.sh
+RUN wget https://raw.githubusercontent.com/churchill-lab/sysgen2015/master/docker/webapp/start-app.sh || chmod 775 start-app.sh
 
 # run the start script
 CMD ['/bin/bash', ' start-app.sh']
