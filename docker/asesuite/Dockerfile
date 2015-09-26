@@ -68,13 +68,8 @@ RUN cd /opt && \
     make && \
     ln -s $(pwd)/emase-zero /usr/local/bin/emase-zero
 
-# Install wget
-RUN  apt-get update \
-  && apt-get install -y wget \
-  && rm -rf /var/lib/apt/lists/*
-
 # Copy extra files
-wget https://github.com/churchill-lab/sysgen2015/raw/master/docker/asesuite/extra.tar.gz && \
+RUN wget https://github.com/churchill-lab/sysgen2015/raw/master/docker/asesuite/extra.tar.gz && \
     tar -xzvf extra.tar.gz -C /usr/local/bin/ && \
     rm extra.tar.gz
 
