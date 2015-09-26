@@ -7,11 +7,11 @@ RUN  apt-get update \
   && apt-get install -y wget \
   && rm -rf /var/lib/apt/lists/*
   
-RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python get-pip.py
+RUN wget https://bootstrap.pypa.io/get-pip.py \
+  && python get-pip.py
 
 # HDF5 installation
-RUN wget http://www.hdfgroup.org/ftp/HDF5/current/bin/linux-centos6-x86_64/hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz
+RUN wget http://www.hdfgroup.org/ftp/HDF5/current/bin/linux-centos6-x86_64/hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz 
 RUN tar xvfz hdf5-1.8.15-patch1-linux-centos6-x86_64-shared.tar.gz && \
     cp -R hdf5-1.8.15-patch1-linux-centos6-x86_64-shared/* /usr/ && \
     rm -Rf hdf*
@@ -25,5 +25,10 @@ RUN pip install flask-cors
 EXPOSE 8888
 EXPOSE 8889
 
+# copy the script to start eQTL/pQTL viewers
+COPY start-app.sh /usr/bin/start-app.sh
+
+# run the start script
+CMD ['/usr/bin/start-app.sh']
 
 
