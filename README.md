@@ -12,7 +12,7 @@ The participants use their web browsers to connect to customized [Docker](https:
 
 ![rstudio](figures/rstudio.jpg) | ![terminal](figures/butterfly.jpg)
 
-Docker is a lightweight container virtualization platform. We created three Docker images for this course: [churchill/doqtl](https://github.com/churchill-lab/sysgen2015/tree/master/docker/doqtl) (RStudio, DOQTL, DESeq2), [churchill/asesuite](https://github.com/churchill-lab/sysgen2015/blob/master/docker/asesuite/Dockerfile) (kallisto, EMASE) and [churchill/webapp](https://github.com/churchill-lab/sysgen2015/blob/master/docker/webapp/Dockerfile) (eQTL/pQTL viewer).  You can run docker containers on your computer or in the cloud environments like AWS, Digital Ocean, Microsoft Azure or Google Cloud. [Dockerfiles](https://github.com/churchill-lab/sysgen2015/blob/master/docker/asesuite/Dockerfile) can serve as a list of instructions how to install the software on your computer.
+Docker is a lightweight container virtualization platform. We created three Docker images for this course: [churchill/doqtl](https://github.com/churchill-lab/sysgen2015/tree/master/docker/doqtl) (RStudio, DOQTL, DESeq2), [churchill/asesuite](https://github.com/churchill-lab/sysgen2015/blob/master/docker/asesuite/Dockerfile) (kallisto, EMASE) and [churchill/webapp](https://github.com/churchill-lab/sysgen2015/blob/master/docker/webapp/Dockerfile) (eQTL/pQTL viewer).  You can run docker containers on your computer or in the cloud environments like AWS, Digital Ocean, Microsoft Azure or Google Cloud. [Dockerfiles](https://github.com/churchill-lab/sysgen2015/blob/master/docker/asesuite/Dockerfile) can also serve as a list of instructions how to install the software on your computer.
 
 ## How to start Digital Ocean droplet?
 
@@ -32,7 +32,7 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 
 ![Docker button](figures/docker.jpg)
 
-* Note down your droplet's IP.ADDRESS. SSH into your droplet (`ssh root@DROPLET.IP.ADDRESS`) and pull docker images
+* Note down your droplet's IP.ADDRESS. SSH into your droplet (`ssh root@IP.ADDRESS`) and pull docker images
 ```{r}
   docker pull rocker/hadleyverse
   docker pull churchill/doqtl
@@ -62,6 +62,6 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 
 ### Access your virtual machine in the web browser
 
-In your browser you can now access RStudio at http://DROPLET.IP.ADDRESS:8787 (user: rstudio, password: rstudio) and the terminal at http://DROPLET.IP.ADDRESS:8080 (user: root, password: root). The eQTL and pQTL viewers are running at http://DROPLET.IP.ADDRESS:8888 and http://DROPLET.IP.ADDRESS:8889, respectively.
+In your browser you can now access RStudio at http://IP.ADDRESS:8787 (user: rstudio, password: sysgen) and the terminal at http://IP.ADDRESS:43210 (user: root, password: sysgen). The eQTL and pQTL viewers are running at http://IP.ADDRESS:8888 and http://IP.ADDRESS:8889, respectively.
 
 You are paying for your Digital Ocean machine as long as it is running. Do not forget to destroy it when you are done!
