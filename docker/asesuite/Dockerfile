@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
     libhdf5-serial-dev \
     sqlite3 \
     libsqlite3-dev \
+    python-numexpr \
     python-numpy \
+    python-matplotlib \
     python-tables \
 #    python-scipy \
     gfortran \
@@ -31,7 +33,11 @@ RUN pip install bx-python
 RUN pip install pytabix
 RUN pip install pysqlite
 RUN pip install scipy==0.13.3
+RUN pip install cython
 RUN pip install progressbar
+
+# Install emase (python prototype)
+RUN pip install emase
 
 # Install g2gtools
 RUN cd /opt && \
@@ -55,9 +61,6 @@ RUN cd /opt && \
     ln -s $(pwd)/emasify.py  /usr/local/bin/kallisto-to-emase && \
     rm /opt/cmake-3.2.3-Linux-x86_64.tar.gz
 
-# Install emase (python prototype)
-RUN pip install emase
-
 # Install emase-zero
 RUN cd /opt && \
     git clone https://github.com/churchill-lab/emase-zero.git && \
@@ -65,10 +68,16 @@ RUN cd /opt && \
     make && \
     ln -s $(pwd)/emase-zero /usr/local/bin/emase-zero
 
+# Copy extra files
+RUN wget https://github.com/churchill-lab/sysgen2015/raw/master/docker/asesuite/extra.tar.gz && \
+    tar -xzvf extra.tar.gz -C /usr/local/bin/ && \
+    rm extra.tar.gz
+
 # Install butterfly
 RUN pip install butterfly
-RUN echo "root\nroot\n" | passwd root
+RUN echo "sysgen\nsysgen\n" | passwd root
 
-EXPOSE 8080
+EXPOSE 43210
+EXPOSE 43211
 ENTRYPOINT ["butterfly.server.py"]
-CMD ["--unsecure", "--port=8080", "--host=0.0.0.0"]
+CMD ["--unsecure", "--port=43210", "--host=0.0.0.0"]
