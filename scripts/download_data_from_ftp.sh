@@ -32,10 +32,6 @@ wget --recursive --level=20 --directory-prefix=/data ftp://ftp.jax.org/dgatti/Sh
 mv /data/ftp.jax.org/dgatti/ShortCourse2015/emase /data/emase
 rm -rf /data/ftp.jax.org
 
-# missing
-expected_read_counts_gene_level.txt
-expected_read_counts.m4.txt
-
 # Symbolic link from /data to home/data
 ln -s /data ~/data
 
