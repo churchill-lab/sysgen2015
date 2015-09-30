@@ -6,7 +6,7 @@ This is a repository for [Short Course on Systems Genetics](https://www.jax.org/
 * __kallisto & EMASE__ (KB Choi & N Raghupathy): generate an index, pseudo-align reads and quantify the expression 
 * __DESeq2__ (N Raghupathy) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/Differential_Expression.Rmd): detect differential expression between groups of RNASeq samples
 * __DOQTL__ (D Gatti) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/DOQTL_workshop_2015.Rmd): kinship matrix, linkage and association mapping, eQTL viewer
-* __Mediation analysis__ (S Munger, P Simecek & G Churchill):
+* __Mediation analysis__ (S Munger, P Simecek & G Churchill): to be added soon
 * __D3 viewers__: [eQTL](http://cgd.jax.org/ShortCourse2015/eqtl), [pQTL](http://cgd.jax.org/ShortCourse2015/pqtl)
 
 The participants use their web browsers to connect to customized [Docker](https://docs.docker.com/) containers hosted on [Digital Ocean](https://www.digitalocean.com/?refcode=673c97887267) virtual machines (see screen captures below).
