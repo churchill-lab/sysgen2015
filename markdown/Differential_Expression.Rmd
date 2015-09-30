@@ -24,8 +24,8 @@ library(dplyr)
 
 Let us load the R object file containing all the data we need.
 ```{r load_Robj, results="hide"}
-load("/Users/narayan/Work/SysGen2015/DO192_DataforSysGenCourse.rdata")
-exp.all = read.table("/Users/narayan/Work/SysGen2015/expected_read_counts_gene_level.txt", header=T)
+load("/data/RData/DO192_DataforSysGenCourse.rdata")
+exp.all = read.table("/data/emase/expected_read_counts_gene_level.txt", header=T)
 ```
 
 Let us check the expression data and make it a matrix.
