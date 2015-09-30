@@ -3,7 +3,7 @@
 
 This is a repository for [Short Course on Systems Genetics](https://www.jax.org/education-and-learning/education-calendar/2015/september/short-course-on-systems-genetics) (9/27 - 10/02/2015) at [The Jackson Laboratory](http://www.jax.org) that includes the following tutorials:
 
-* __kallisto & EMASE__ (KB Choi & N Raghupathy): generate an index, pseudo-align reads and quantify the expression 
+* __kallisto, EMASE & g2gtools__ (KB Choi & N Raghupathy) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/RNASeq_pipeline.md): generate an index, pseudo-align reads and quantify the expression 
 * __DESeq2__ (N Raghupathy) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/Differential_Expression.Rmd): detect differential expression between groups of RNASeq samples
 * __DOQTL__ (D Gatti) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/DOQTL_workshop_2015.Rmd): kinship matrix, linkage and association mapping, eQTL viewer
 * __Mediation analysis__ (S Munger, P Simecek & G Churchill): to be added soon
