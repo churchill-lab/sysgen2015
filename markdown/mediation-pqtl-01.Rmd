@@ -1,0 +1,195 @@
+---
+title: "Mediation and pQTL Workshop: Short Course on Systems Genetics 2015"
+date: "10/3/2015"
+output: html_document
+---
+
+## Introduction 
+
+We will explore RNA and protein expression data from [Diversity Outbred (DO)  Mice](http://jaxmice.jax.org/strain/009376.html). 192 DO mice (98 females & 94 males) were placed on either a chow diet or a high fat diet. They were aged to approximately 22 weeks and a variety of physiological phenotypes were measured. At sacrifice, we collected liver tissue and measured gene expression using RNASeq and protein levels using mass spectrometry.
+
+Sex | chow | HFD
+----|------|----
+ F  |  50  |  48
+ M  |  48  |  46
+
+
+## Libraries and Data Import
+
+We will load [ggplot2](http://ggplot2.org/), a  R library for producing layered graphics.
+
+```{r, results='hide', message=FALSE}
+library(ggplot2)
+```
+
+Load in the RNA and protein expression data.
+
+```{r warning=FALSE}
+load("/data/Rdata/DO192_DataforSysGenCourse.Rdata")
+```
+
+View the contents of the data set using ls(). You can also
+use the Environment tab to view data.
+
+```{r warning=FALSE}
+ls()
+```
+
+## RNA Expression Data
+
+View some of the properties of the RNA expression data. It is a large `r class(expr.rna.192)` with `r nrow(expr.rna.192)` rows and `r ncol(expr.rna.192)` columns. Samples are in rows and Ensembl gene IDs are in columns.
+
+```{r warnings=FALSE}
+class(expr.rna.192)
+dim(expr.rna.192)   
+rownames(expr.rna.192)
+colnames(expr.rna.192)[1:20]
+```
+
+Early in the course we looked at methods for dealing with
+missing data. How much is missing in the RNA expression data?
+
+```{r warning=FALSE}
+apply(is.na(expr.rna.192), 1, sum)
+```
+
+Covariates of the 192 samples include sex, diet, sex-by-diet interaction, generation, and coat color.
+
+```{r warning=FALSE}
+dim(covariates.rna.192)
+head(covariates.rna.192)
+```
+
+View sex-by-diet interaction groups. The group sizes should be similar.
+
+```{r warning=FALSE}
+with(covariates.rna.192,  table(factor(Sdinteraction, labels=c("FC", "FH", "MC", "MH"))))
+```
+
+Look at the coat color frequencies.
+
+```{r warning=FALSE}
+table(covariates.rna.192$Coat.Color)
+```
+
+Thirteen percent of the animals are white, and sixteen percent are black.
+
+Annotations describe genomic location, symbol, strand, and more for genes.
+
+```{r warning=FALSE}
+dim(annotations.rna.192)
+names(annotations.rna.192)
+table(annotations.rna.192$Chr)
+```
+
+Notice that chromosomes are character variables. Convert to numeric variables.
+
+```{r warning=FALSE}
+class(annotations.rna.192$Chr)
+annotations.rna.192 <- transform(annotations.rna.192, Chr.num =  as.numeric(ifelse(Chr=="X", "20", Chr)))
+class(annotations.rna.192$Chr.num)
+table(annotations.rna.192$Chr.num)
+```
+
+How many RNA traits are mapped to the Y chromosome or mitochondrial genome?
+
+```{r warning=FALSE}
+length(notYM)
+sum(1-notYM)
+```
+
+## Protein Expression Data
+
+The protein expression data are in a large `r class(expr.protein.192)` of `r nrow(expr.protein.192)` rows and `r ncol(expr.protein.192)` columns.
+
+```{r warning=FALSE}
+class(expr.protein.192)
+dim(expr.protein.192)
+rownames(expr.protein.192)
+colnames(expr.protein.192)[1:20]
+```
+
+How much is missing in the protein expression data?
+```{r warning=FALSE}
+apply(is.na(expr.protein.192),1,sum)
+```
+
+What is the range of missing data across proteins?
+```{r warning=FALSE}
+qplot(apply(is.na(expr.protein.192), 2, sum))
+```
+Some of the proteins have a lot of missing data. Keep this in mind.
+
+What is the proportion of proteins that have no missing data?
+```{r warning=FALSE}
+sum((apply(is.na(expr.protein.192),2,sum))==0)/8050
+```
+
+As with the RNA expression data, covariates describe the characteristics of 192 samples of protein expression data. Every sample has a unique combination of tag and batch.
+
+```{r warning=FALSE}
+dim(covariates.protein.192)
+head(covariates.protein.192)
+table(covariates.protein.192$Sdinteraction)
+with(covariates.protein.192, table(Tag, Batch))
+```
+
+As with RNA expression data, annotations describe the genes.
+```{r warning=FALSE}
+dim(annotations.protein.192)
+names(annotations.protein.192)
+table(annotations.protein.192$Chromosome.Name)
+class(annotations.protein.192$Chromosome.Name)
+```
+
+Chromosome.Name is stored as a character variable. It is convenient to convert it to a numeric variable.
+
+```{r warning=FALSE}
+annotations.protein.192 <-
+  transform(annotations.protein.192, Chr.num =
+              as.numeric(ifelse(Chromosome.Name=="X", "20",
+                                Chromosome.Name)))
+class(annotations.protein.192$Chr.num)
+table(annotations.protein.192$Chr.num)
+```
+
+## Haplotype probabilities, SNPs, and kinship
+
+Recall that haplotype probabilities are stored in a 3D array.
+
+```{r warning=FALSE}
+dim(probs.192)  
+```
+
+View the physical and genetic positions of the "pseudo-SNP" grid equally spaced on the genetic map. Note as before that Chr is a character variable. 
+
+```{r warning=FALSE}
+head(snps.64K)
+table(snps.64K$Chr)   
+class(snps.64K$Chr)
+```
+
+The kinship matrix describing the degree of relatedness between each pair of mice was produced from the haplotype probabilities. We have created a kinship matrix for each chromosome. We calculate the kinship matrix on each chromosome using the markers from all of the other chromosomes, but excluding the markers on the current chromosome. For example, on Chr 1 we would calculate the kinship between mice using markers on Chr 2 through Chr X.  This has been shown to increase power for some QTL. The acronym "LOCO" stands for "Leave One Chromosome Out." The chromosome specific kinship matrices are stored as a list.
+
+```{r warning=FALSE}
+length(K.LOCO.192)
+class(K.LOCO.192[[1]])
+dim(K.LOCO.192[[1]])
+```
+
+View a heatmap of a kinship matrix for chromosome 3.
+
+```{r warning=FALSE}
+image(K.LOCO.192[[3]])
+```
+
+View the distribution of kinship values
+```{r warning=FALSE}
+qplot(K.LOCO.192[[1]][lower.tri(K.LOCO.192[[1]])], geom="histogram")
+```
+
+Look at a sample of the names.
+
+```{r warning=FALSE}
+head(samples.192)
+```

@@ -4,7 +4,7 @@
 #
 #  Copyright Gary A Churchill
 #  created:    Sept 23, 2015 
-#  modified:  Spet 26 _GAC
+#  modified:  Sept 26 _GAC
 #################################
 
 # load graphics package 
@@ -30,7 +30,7 @@ colnames(expr.rna.192)[1:20]
 apply(is.na(expr.rna.192),1,sum)
 # none - that is nice!
 
-# covarites describe the characteristics of 192 samples
+# covariates describe the characteristics of 192 samples
 dim(covariates.rna.192)
 head(covariates.rna.192)
 
@@ -61,8 +61,8 @@ sum(1-notYM)
 ##
 # the protein expression data are in a large matrix
 class(expr.protein.192)
-dim(expr.protein.192)    # there are 8050 protein expression trains
-rownames(expr.protein.192)   # note correspondence of row names with rna data
+dim(expr.protein.192)    # there are 8050 protein expression traits
+rownames(expr.protein.192)   # note correspondence of row names with RNA data
 colnames(expr.protein.192)[1:20]
 
 ###
@@ -70,14 +70,14 @@ colnames(expr.protein.192)[1:20]
 apply(is.na(expr.protein.192),1,sum)
 # not so nice as the RNA data
 #
-# what is the range of missimng data across proteins?
+# what is the range of missing data across proteins?
 qplot(apply(is.na(expr.protein.192),2,sum))
-# some proteins have a lot of missimg data - keep in mind
+# some proteins have a lot of missing data - keep in mind
 #
-#proportion of proteins that have no missing data
+# proportion of proteins that have no missing data
 sum((apply(is.na(expr.protein.192),2,sum))==0)/8050
 
-# covarites describe the characteristics of 192 samples
+# covariates describe the characteristics of 192 samples
 dim(covariates.protein.192)
 head(covariates.protein.192)
 table(covariates.protein.192$Sdinteraction)
@@ -100,7 +100,7 @@ table(annotations.protein.192$Chr.num)
 # genotype probabilities are stored in a 3D array
 dim(probs.192)  #192 x 8 x 64000
 
-#physical and genetic positions of the "pseudo-SNP" grid
+# physical and genetic positions of the "pseudo-SNP" grid
 # equally spaced on the genetic map
 head(snps.64K)
 table(snps.64K$Chr)   
@@ -108,7 +108,7 @@ class(snps.64K$Chr)
 # note as before Chr is a character variable
 
 ##
-#chromsome specific kinship matrices are stored as a list
+#chromosome specific kinship matrices are stored as a list
 length(K.LOCO.192)
 class(K.LOCO.192[[1]])
 dim(K.LOCO.192[[1]])
