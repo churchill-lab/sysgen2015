@@ -1,6 +1,6 @@
 ---
 title: "Mediation and pQTL Workshop: Short Course on Systems Genetics 2015"
-date: "10/3/2015"
+date: "10/2/2015"
 output: html_document
 ---
 
@@ -29,7 +29,7 @@ load("/data/Rdata/DO192_DataforSysGenCourse.Rdata")
 ```
 
 View the contents of the data set using ls(). You can also
-use the Environment tab to view data.
+use the Environment tab in RStudio to view data.
 
 ```{r warning=FALSE}
 ls()
@@ -42,6 +42,10 @@ View some of the properties of the RNA expression data. It is a large `r class(e
 ```{r warnings=FALSE}
 class(expr.rna.192)
 dim(expr.rna.192)   
+```
+
+Let's have a look at sample names and at the first 20 Ensembl gene IDs.
+```{r warnings=FALSE}
 rownames(expr.rna.192)
 colnames(expr.rna.192)[1:20]
 ```
@@ -52,15 +56,21 @@ missing data. How much is missing in the RNA expression data?
 ```{r warning=FALSE}
 apply(is.na(expr.rna.192), 1, sum)
 ```
+None of the samples are missing RNA expression data.
 
-Covariates of the 192 samples include sex, diet, sex-by-diet interaction, generation, and coat color.
+Covariates of the 192 samples include sex, diet, sex-by-diet interaction, batch, generation, and coat color.
 
 ```{r warning=FALSE}
 dim(covariates.rna.192)
+```
+
+Let's look at the first several rows of covariates.
+
+```{r warning=FALSE}
 head(covariates.rna.192)
 ```
 
-View sex-by-diet interaction groups. The group sizes should be similar.
+View sex-by-diet interaction groups (females on chow or high fat diet, males on chow or high fat). The group sizes should be similar.
 
 ```{r warning=FALSE}
 with(covariates.rna.192,  table(factor(Sdinteraction, labels=c("FC", "FH", "MC", "MH"))))
@@ -78,11 +88,16 @@ Annotations describe genomic location, symbol, strand, and more for genes.
 
 ```{r warning=FALSE}
 dim(annotations.rna.192)
+```
+
+Let's have a look at the column names in the annotation data, and the number of annotations for each chromosome.
+
+```{r warning=FALSE}
 names(annotations.rna.192)
 table(annotations.rna.192$Chr)
 ```
 
-Notice that chromosomes are character variables. Convert to numeric variables.
+Notice that chromosomes are character variables. Convert the chromosome numbers to numeric, including the X chromosome. Once converted to numeric, the chromosome numbers will order correctly.
 
 ```{r warning=FALSE}
 class(annotations.rna.192$Chr)
@@ -98,6 +113,9 @@ length(notYM)
 sum(1-notYM)
 ```
 
+`r sum(1-notYM)` RNA traits map to the Y chromosome or mitochondrial genome.
+
+
 ## Protein Expression Data
 
 The protein expression data are in a large `r class(expr.protein.192)` of `r nrow(expr.protein.192)` rows and `r ncol(expr.protein.192)` columns.
@@ -105,22 +123,34 @@ The protein expression data are in a large `r class(expr.protein.192)` of `r nro
 ```{r warning=FALSE}
 class(expr.protein.192)
 dim(expr.protein.192)
+```
+
+Let's look at the sample IDs and at the first 20 Ensembl protein IDs.
+
+```{r warning=FALSE}
 rownames(expr.protein.192)
 colnames(expr.protein.192)[1:20]
 ```
 
 How much is missing in the protein expression data?
+
 ```{r warning=FALSE}
 apply(is.na(expr.protein.192),1,sum)
 ```
 
+All samples are missing data for a considerable proportion of the `r ncol(expr.protein.192)` proteins.
 What is the range of missing data across proteins?
+
 ```{r warning=FALSE}
 qplot(apply(is.na(expr.protein.192), 2, sum))
 ```
+
+
+
 Some of the proteins have a lot of missing data. Keep this in mind.
 
 What is the proportion of proteins that have no missing data?
+
 ```{r warning=FALSE}
 sum((apply(is.na(expr.protein.192),2,sum))==0)/8050
 ```
@@ -130,11 +160,18 @@ As with the RNA expression data, covariates describe the characteristics of 192 
 ```{r warning=FALSE}
 dim(covariates.protein.192)
 head(covariates.protein.192)
+```
+
+Let's check group sizes for sex-by-diet interaction, and for combinations of tag and batch.
+
+
+```{r warning=FALSE}
 table(covariates.protein.192$Sdinteraction)
 with(covariates.protein.192, table(Tag, Batch))
 ```
 
-As with RNA expression data, annotations describe the genes.
+As with RNA expression data, annotations describe the proteins.
+
 ```{r warning=FALSE}
 dim(annotations.protein.192)
 names(annotations.protein.192)
@@ -142,7 +179,7 @@ table(annotations.protein.192$Chromosome.Name)
 class(annotations.protein.192$Chromosome.Name)
 ```
 
-Chromosome.Name is stored as a character variable. It is convenient to convert it to a numeric variable.
+Chromosome.Name is stored as a character variable. It is convenient to convert it to a numeric variable. Once it's converted, check the number of annotations per chromosome.
 
 ```{r warning=FALSE}
 annotations.protein.192 <-
