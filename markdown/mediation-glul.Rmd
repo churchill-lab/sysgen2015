@@ -1,0 +1,320 @@
+---
+title: 'Mediation Analysis Example: Glul'
+author: Gary A. Churchill
+output: html_document
+---
+## Introduction 
+
+We will explore mediation analysis in RNA and protein expression data from [Diversity Outbred (DO)  Mice](http://jaxmice.jax.org/strain/009376.html). 
+
+## Libraries and Data Import
+
+Load the libraries for [ggplot2](http://ggplot2.org/) and [DOQTL](http://www.bioconductor.org/packages/release/bioc/html/DOQTL.html)
+
+```{r, results='hide', message=FALSE}
+library(DOQTL)
+library(ggplot2)
+```
+
+Load the DO data.
+
+```{r, message=FALSE}
+load("/data/Rdata/DO192_DataforSysGenCourse.Rdata")
+```
+
+Convert sex and diet to numeric variables (0 = Female, 1 = male).
+
+```{r, message=FALSE}
+Sex <- as.numeric(factor(covariates.rna.192$Sex))-1
+Diet <- as.numeric(factor(covariates.rna.192$Diet))-1
+```
+
+Create numerical indices for chromosome annotations.
+
+```{r, message=FALSE}
+annotations.rna.192 <- transform(annotations.rna.192, Chr.num =  as.numeric(ifelse(Chr=="X", "20", Chr)))
+annotations.protein.192 <- transform(annotations.protein.192, Chr.num = as.numeric(ifelse(Chromosome.Name=="X", "20", Chromosome.Name)))
+```
+
+## RNA and Protein Trait Analysis
+
+What covariates are available?
+
+```{r, message=FALSE}
+head(covariates.protein.192)
+head(covariates.rna.192)
+```
+
+Create a dataframe with Glul, the gene of interest.
+
+```{r, message=FALSE}
+mydata <- transform(covariates.rna.192,
+                    Glul.r = expr.rna.192[,which(annotations.rna.192$Gene == "Glul")],
+                    Glul.p = expr.protein.192[,which(annotations.protein.192$Associated.Gene.Name == "Glul")],
+                    Sex = as.factor(Sex), Diet = as.factor(Diet), 
+                    SexDiet = factor(Sdinteraction, labels=c("FC", "FH", "MC", "MH")), 
+                    Parity = as.factor(Gen), Black = (Coat.Color=="black"), White = (Coat.Color=="white"),
+                    Prot.Tag = covariates.protein.192$Tag, Prot.Batch = covariates.protein.192$Batch)
+mydata <- mydata[,-c(3,4,6)]
+str(mydata)  
+```
+
+Boxplots suggest a diet effect on Glul is stronger in males.
+
+```{r, message=FALSE}
+qplot(SexDiet, color=Sex, shape=Diet, Glul.r, data=mydata) + geom_boxplot()
+qplot(SexDiet, color=Sex, shape=Diet, Glul.p, data=mydata) + geom_boxplot()
+```
+
+Run the sex-by-diet ANOVA to confirm diet and sex effects.
+
+```{r, message=FALSE}
+anova(lm(Glul.r ~ Sex*Diet, data=mydata))
+anova(lm(Glul.p ~ Sex*Diet, data=mydata))
+```
+
+Check for tag and batch effects on protein.
+
+```{r, message=FALSE}
+anova(lm(Glul.p ~ Prot.Tag, data=mydata))
+anova(lm(Glul.p ~ Prot.Batch, data=mydata))
+```
+
+P-values near 1.0 suggest data have been normalized.  
+
+Create scatterplots of RNA and protein.
+
+```{r, message=FALSE}
+qplot(Glul.r, Glul.p, color=Sex, shape=Diet, data=mydata) + geom_smooth(method="lm", se=FALSE)
+```
+
+The correlation of RNA and protein is 0.69.
+```{r, message=FALSE}
+with(mydata, cor(Glul.r, Glul.p))
+```
+
+## Genome Scan Analysis of Glul
+
+The location of Glul is Chr 1 at 153.9Mb.
+
+```{r, message=FALSE}
+annotations.rna.192[which(annotations.rna.192$Gene == "Glul"),]
+```
+
+Create a covariate data structure.
+
+```{r, message=FALSE}
+covs <- data.frame(cbind(Sex, Diet))
+rownames(covs) <- rownames(mydata)
+```
+
+Mediation analysis of Glul.r and Glul.p is carried out in 4-steps using genome scans
+
+1. RNA ~ Q
+2. Prot ~ Q
+3. RNA ~ Q | Prot
+4. Prot ~ Q | RNA
+
+A note on genome scans:  no kinship correction - checked and it doesn't seem to matter much.
+
+### Step 1: scan Glul RNA
+
+```{r, message=FALSE}
+Glul.r.scan <- scanone(pheno=mydata, pheno.col="Glul.r", probs=probs.192,
+                       addcovar=covs, snps=snps.64K)
+plot(Glul.r.scan)
+```
+
+Look at the structure of the scan output.
+
+```{r, message=FALSE}
+str(Glul.r.scan)
+```
+
+whooey!
+
+Find the lod peak.
+
+```{r, message=FALSE}
+indx.maxr <- with(Glul.r.scan$lod$A, which(lod==max(lod)))
+Glul.r.scan$lod$A[indx.maxr,]
+```
+
+The LOD score at the peak is 16.91.
+
+### Step 2: scan Glul protein.
+```{r, message=FALSE}
+Glul.p.scan <- scanone(pheno=mydata, pheno.col="Glul.p", probs=probs.192,
+                       addcovar=covs, snps=snps.64K)
+plot(Glul.p.scan)
+```
+
+Find the lod peak
+```{r, message=FALSE}
+indx.maxp <- with(Glul.p.scan$lod$A, which(lod==max(lod)))
+Glul.p.scan$lod$A[indx.maxr,]
+```
+
+Note that the peak location is the same. The LOD score is lower: 12.82.
+
+
+### Step 3: scan Glul RNA conditioned on protein
+
+Modify covariates for conditional scan.
+
+```{r, message=FALSE}
+covs <- data.frame(cbind(covs[,1:2],mydata$Glul.p))
+Glul.r.condp.scan <- scanone(pheno=mydata, pheno.col="Glul.r", probs=probs.192,
+                             addcovar=covs, snps=snps.64K)
+plot(Glul.r.condp.scan)
+```
+
+Check the peak LOK score.
+
+```{r, message=FALSE}
+indx.maxr.p <- with(Glul.r.condp.scan$lod$A, which(lod==max(lod)))
+Glul.r.condp.scan$lod$A[indx.maxr.p,]
+```
+
+The peak marker is still on 10, very close, but the LOD score dropped to 6.87.
+
+```{r, message=FALSE}
+Glul.r.condp.scan$lod$A[indx.maxr,]
+```
+
+At the original peak, the LOD drops to 6.76.
+
+
+### Step 4: scan Glul protein conditioned on RNA
+
+Modify covariates for conditional scan.
+
+```{r, message=FALSE}
+covs <- data.frame(cbind(covs[,1:2],mydata$Glul.r))
+#
+Glul.p.condr.scan <- scanone(pheno=mydata, pheno.col="Glul.p", probs=probs.192, 
+                             addcovar=covs, snps=snps.64K)
+plot(Glul.p.condr.scan)
+```
+
+
+Check the peak LOD.
+
+```{r, message=FALSE}
+indx.maxp.r <- with(Glul.p.condr.scan$lod$A, which(lod==max(lod)))
+Glul.p.condr.scan$lod$A[indx.maxp.r,]
+```
+
+The new peak marker is on chr 2.
+```{r, message=FALSE}
+Glul.p.condr.scan$lod$A[indx.maxr,]
+```
+
+At the original peak, the LOD drops to 2.67.
+
+Notes:
+There is a shared LOD peak at 17.16Mb for Glul RNA and protein on Chr 10.
+The peak SNPID is 10_30766019
+The LOD score for RNA (16.91) is higher than for protein (12.82).
+Conditioning the RNA trait on protein reduces the LOD from 16.91 to 6.87.
+Conditioning the protein trait on RNA reduces the LOD from 12.82 to 2.67.
+This is consistent with the model Q10 -> Glul.r -> Glul.p
+
+
+Closing the plots will save memory.
+
+```{r, message=FALSE}
+graphics.off()
+```
+
+Repeat mediation at the peak marker using linear model fitting.
+
+Get the genotype probabilities at the peak marker.
+
+```{r, message=FALSE}
+Q10 <- probs.192[,,"10_30766019"]
+head(Q10)
+```
+
+Look at the frequency of founder alleles at the peak marker
+Expect 24 = 192/8
+
+```{r, message=FALSE}
+apply(Q10,2,sum)
+```
+
+Note the low frequency of B6 and excess of CAST.
+
+Add Q10 genotype probabilities into mydata.
+```{r, message=FALSE}
+mydata <- data.frame(cbind(mydata[,1:8], Q10))
+names(mydata)
+```
+
+Check for missing data!  
+It is important to remove all cases with missing data before fitting linear models.
+
+```{r, message=FALSE}
+sum(is.na(mydata$Glul.r))
+sum(is.na(mydata$Glul.p))
+```
+
+There are none in this example. Phew!
+
+Here is what to do if you have missing data
+
+```{r, message=FALSE}
+miss.indx <- which(is.na(mydata$Glul.r)|is.na(mydata$Glul.p))
+mydata <- maydata[-miss.indx,]
+```
+
+Note that this will put your "mydata" out of register with the other data objects in this environment.
+Also note to self - should have paid attention to this in genome scans!!!
+
+### Linear Model Tests
+
+Linear model fit of Glul.r  
+Q -> RNA ?
+
+```{r, message=FALSE}
+anova(lm(Glul.r ~ Sex*Diet, data=mydata),
+      lm(Glul.r ~ -1 + A + B + C + D + E + F + G + H + Sex*Diet, data=mydata))
+```
+
+Linear model fit of Glul.p
+Q -> Prot ?
+
+```{r, message=FALSE}
+anova(lm(Glul.p ~ Sex*Diet, data=mydata),
+      lm(Glul.p ~ -1 + A + B + C + D + E + F + G + H + Sex*Diet, data=mydata))
+```
+
+Linear model fit of Glul RNA conditioned on protein
+Q -> RNA | Prot ?
+
+```{r, message=FALSE}
+anova(lm(Glul.r ~ Glul.p+Sex*Diet, data=mydata),
+      lm(Glul.r ~ Glul.p+A + B + C + D + E + F + G + H + Sex*Diet, data=mydata))
+```
+
+Linear model fit of Glul Prot condtioned on RNA
+Q -> Prot | RNA ?
+
+```{r, message=FALSE}
+anova(lm(Glul.p ~ Glul.r+Sex*Diet, data=mydata),
+      lm(Glul.p ~ Glul.r+A + B + C + D + E + F + G + H + Sex*Diet, data=mydata))
+```
+
+
+Compare model coefficients
+
+```{r, message=FALSE}
+RNA.coef <- coefficients(lm(Glul.r ~ -1 + A + B + C + D + E + F + G + H + Sex*Diet, data=mydata))[1:8]
+Prot.coef <- coefficients(lm(Glul.p ~ -1 + A + B + C + D + E + F + G + H + Sex*Diet, data=mydata))[1:8]
+
+ggplot(data.frame(RNA.coef, Prot.coef), aes(x=RNA.coef, y=Prot.coef)) + 
+  geom_text(label=names(RNA.coef)) + 
+  geom_smooth(method="lm")  
+```
+
+### Challenge:  Glul is on chromosome 1, but the QTL is on chromosome 10. There must be a trans acting factor that is driving the variation in Glul expression. Can you find it?  
