@@ -265,7 +265,7 @@ Here is what to do if you have missing data
 
 ```{r, message=FALSE}
 miss.indx <- which(is.na(mydata$Glul.r)|is.na(mydata$Glul.p))
-mydata <- maydata[-miss.indx,]
+mydata <- mydata[-miss.indx,]
 ```
 
 Note that this will put your "mydata" out of register with the other data objects in this environment.

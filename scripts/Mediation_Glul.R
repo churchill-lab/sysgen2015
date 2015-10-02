@@ -203,7 +203,7 @@ sum(is.na(mydata$Glul.p))
 
 #here is what to do if you have missing data
 miss.indx <- which(is.na(mydata$Glul.r)|is.na(mydata$Glul.p))
-mydata <- maydata[-miss.indx,]
+mydata <- mydata[-miss.indx,]
 # note that this will put your "mydata" out of register with the other
 # data objects in this environment
 #  also note to self - should have paid attention to this in genome scans!!!
