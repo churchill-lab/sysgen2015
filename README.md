@@ -6,7 +6,7 @@ This is a repository for [Short Course on Systems Genetics](https://www.jax.org/
 * __kallisto, EMASE & g2gtools__ (KB Choi & N Raghupathy) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/RNASeq_pipeline.md): generate an index, pseudo-align reads and quantify the expression 
 * __DESeq2__ (N Raghupathy) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/Differential_Expression.Rmd): detect differential expression between groups of RNASeq samples
 * __DOQTL__ (D Gatti) [[markdown]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/DOQTL_workshop_2015.Rmd): kinship matrix, linkage and association mapping, eQTL viewer
-* __Mediation analysis__ (S Munger, P Simecek & G Churchill): to be added soon
+* __Mediation analysis__ (S Munger, P Simecek & G Churchill) [[markdown1]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/mediation-pqtl-01.Rmd) [[markdown2]](https://github.com/churchill-lab/sysgen2015/blob/master/markdown/mediation-glul.Rmd) [[markdown3]](https://cdn.rawgit.com/churchill-lab/sysgen2015/master/markdown/mediation.examples.html): find an intermediate between genotype and trans-regulated gene/protein
 * __D3 viewers__: [eQTL](http://cgd.jax.org/ShortCourse2015/eqtl), [pQTL](http://cgd.jax.org/ShortCourse2015/pqtl)
 
 The participants use their web browsers to connect to customized [Docker](https://docs.docker.com/) containers hosted on [Digital Ocean](https://www.digitalocean.com/?refcode=673c97887267) virtual machines (see screen captures below).
@@ -58,7 +58,7 @@ Scroll down to "Select image", click on 'Applications' tab and select Docker. Cl
 
 * Install [R/analogsea](https://github.com/sckott/analogsea) package to your computer
 * Create [Digital Ocean API key](https://cloud.digitalocean.com/settings/applications) and copy it to the second line of a script below
-* Run [the script](https://github.com/simecek/AddictionCourse2015/blob/master/scripts/run_one_DO_machine.R)
+* Run [the script](https://github.com/churchill-lab/sysgen2015/blob/master/scripts/run_one_DO_machine.R)
 
 
 ### Access your virtual machine in the web browser
