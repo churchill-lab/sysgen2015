@@ -1,11 +1,26 @@
 ---
-title: "DOQTL Workshop: Short Course on Systems Genetics 2015"
+layout: lesson
+root: .
+title: "Mapping QTL in the Diversity Outbred (DO)"
 author: "Daniel M. Gatti"
-date: "10/1/2015"
+minutes: 
 output: html_document
 ---
 
-## Introduction 
+
+## Learning Objectives 
+
+* Explore data from Diversity Outbred (DO) mice.
+* Map a gene expression trait.
+* Map all gene expression traits in a data set.
+
+
+ 
+
+
+
+
+## Mapping QTL in the Diversity Outbred (DO) 
 
 We will be mapping phenotypes from unpublished data using [Diversity Outbred (DO)  Mice](http://jaxmice.jax.org/strain/009376.html). 192 DO mice (98 females & 94 males) were
 placed on either a chow diet or a high fat diet. They were aged to approximately 22 weeks
@@ -19,9 +34,8 @@ Sex | chow | HFD
 
 In this tutorial, we will map gene expression traits. We will perform linkage mapping using the DO haplotype reconstructions and then perform association mapping using imputed SNPs from the DO founders. You will then map an expression trait that you choose.
 
-![DO figure](./DO.circle.figure.png)
-
-## Libraries and Data Import
+## Exercises
+### Libraries and Data Import
 
 First, we will load the R libraries that we need to perform the analysis. These include [DOQTL](http://bioconductor.org/packages/release/bioc/html/DOQTL.html), a package designed to map traits in DO mice, and [rhdf5](https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html), a package that stores compressed data in [HDF5](https://www.hdfgroup.org/HDF5/) format.
 
@@ -35,7 +49,7 @@ We will be working with data that is stored locally. For the first exercise, we 
 1. Phenotype measurements on a set of DO mice
 2. Genotypes across the genome on the same set of DO mice
 
-All of the data for this tutorial is stored in a compressed R binary file that ends with "Rdata". You load an Rdata file in using the *load()* command.
+All of the data for this tutorial is stored in a compressed R binary file that ends with `Rdata`. You load an Rdata file in using the `load()` command.
 
 Next, we need to load in the haplotype probabilities. These are in large Rdata files with other variables that will be used later.
 
@@ -43,7 +57,7 @@ Next, we need to load in the haplotype probabilities. These are in large Rdata f
 load("/data/Rdata/DO192_DataforSysGenCourse.Rdata")
 ```
 
-These commands loaded a number of R objects into the environment. Look at the "Environment" tab in the upper left panel of your RStudio window to see them.
+These commands loaded a number of R objects into the environment. Look at the **Environment** tab in the upper left panel of your RStudio window to see them.
 
 We are going to remove a few of the objects that we will not use today.
 
@@ -51,13 +65,13 @@ We are going to remove a few of the objects that we will not use today.
 rm(annotations.protein.192, covariates.protein.192, expr.protein.192)
 ```
 
-First, let's look at the expression data in "expr.rna.192".  It is a large matrix with `r nrow(expr.rna.192)` rows and `r ncol(expr.rna.192)` columns. You are required to have the sample IDs in the rownames of your phenotype type data. Let's look at a small part of the file.
+First, let's look at the expression data in `expr.rna.192.`  It is a large matrix with `r nrow(expr.rna.192)` rows and `r ncol(expr.rna.192)` columns. You are required to have the sample IDs in the rownames of your phenotype type data. Let's look at a small part of the file.
 
 ```{r warnings=FALSE}
 expr.rna.192[1:5,1:6]
 ```
 
-The rows contain sample IDs (F326, F327, F329, etc.) and the columns contain Ensembl Gene IDs. In order to map one gene, we would use one coulmn of data.
+The rows contain sample IDs (F326, F327, F329, etc.) and the columns contain Ensembl Gene IDs. In order to map one gene, we would use one column of data.
 
 Next, let's look at the distribution of one of the genes.
 
@@ -65,11 +79,10 @@ Next, let's look at the distribution of one of the genes.
 hist(expr.rna.192[,1], breaks = 20, main = colnames(expr.rna.192)[1])
 ```
 
-Amazing! It lookes normally distributed. In fact, we have transformed each trait using an inverse normal (or rankZ) transformation. DOQTL contains a function called "rankZ()" that has been applied to each gene. If we leave the exrpession data untransformed, we may have outliers that would adversely affect the QTL mapping. The rankZ transformation provides a compromise between no transformation and simply ranking the data. Value at the extremes of the distriubtion will still have more leverage than values near the mean, but not enough to disrupt the mapping. Also, when all traits have the same distribution we can run permutations on only one gene to assess significance thresholds. 
+Amazing! It lookes normally distributed. In fact, we have transformed each trait using an inverse normal (or rankZ) transformation. DOQTL contains a function called `rankZ()` that has been applied to each gene. If we leave the expression data untransformed, we may have outliers that would adversely affect the QTL mapping. The rankZ transformation provides a compromise between no transformation and simply ranking the data. Value at the extremes of the distribution will still have more leverage than values near the mean, but not enough to disrupt the mapping. Also, when all traits have the same distribution we can run permutations on only one gene to assess significance thresholds. 
 
-Next, let's look at the haplotype probabilities in "probs.192". "probs.192"" is a three dimensional numeric array. The `r nrow(probs.192)` samples are in rows, the `r ncol(probs.192)` DO founders are in columns and the `r dim(probs.192)[3]` markers are in slices. Again, as with the expression data, you are required to have sample IDs in rownames.
+Next, let's look at the haplotype probabilities in `probs.192.` `probs.192` is a three dimensional numeric array. The `r nrow(probs.192)` samples are in rows, the `r ncol(probs.192)` DO founders are in columns and the `r dim(probs.192)[3]` markers are in slices. Again, as with the expression data, you are required to have sample IDs in rownames.
 
-![Haplotype Probs](./haplotype_probs.png)
 
 Let's look at one slice of the haplotype probabilities.
 
@@ -83,19 +96,19 @@ mtext(side = 3, line = 0.5, at = 1:8, text = LETTERS[1:8], cex = 1.5)
 mtext(side = 2, line = 0.5, at = 20:1, text = rownames(probs.192)[1:20], las = 1)
 ```
 
-We also have a kinship matrix that was produced from the haplotype probabilities. A kinship matrix contains the degree of relatedness between each pair of mice. In this case, we have created a kinship matrix for each chromosome. We calculate the kinship matrix on each chromosome using the markers from all of the other chromosomes, but excluding the markers on the current chromosome. For example, on Chr 1, we would calculate the kinship between mice using markers on Chr 2 through Chr X.  This has been shown to increase power for some QTL. The acronym "LOCO" stands for "Leave One Chromosome Out". Below is example code (that we do not run) showing how to calculate the kinship matrix.
+We also have a kinship matrix that was produced from the haplotype probabilities. A kinship matrix contains the degree of relatedness between each pair of mice. In this case, we have created a kinship matrix for each chromosome. We calculate the kinship matrix on each chromosome using the markers from all of the other chromosomes, but excluding the markers on the current chromosome. For example, on Chr 1, we would calculate the kinship between mice using markers on Chr 2 through Chr X.  This has been shown to increase power for some QTL. The acronym LOCO stands for *Leave One Chromosome Out*. Below is example code (that we do not run) showing how to calculate the kinship matrix.
 
 ```{r eval=FALSE}
 K = kinship.probs(probs = probs.192, snps = snps.64K, bychr = TRUE)
 ```
 
-## Mapping a Gene Experssion Trait
+### Mapping a Gene Expression Trait
 
-We will first create a matrix of covariates to use in the mapping model. DOQTL requires a covariate called "sex" because it is used to map on the X chromosome. We will also use diet as a covariate. There are three important points to remember with covariates.
+We will first create a matrix of covariates to use in the mapping model. DOQTL requires a covariate called `sex` because it is used to map on the X chromosome. We will also use diet as a covariate. There are three important points to remember with covariates.
 
 1. Covariates must be numeric,
 2. Covariates must have rownames that contain the same sample IDs as the phenotypes,
-3. Covariates must have one column called "sex".
+3. Covariates must have one column called `sex`.
 
 ```{r warning=FALSE}
 covar = model.matrix(~Sex + Diet, data = covariates.rna.192)[,-1]
@@ -103,7 +116,7 @@ colnames(covar)[1] = "sex"
 rownames(covar) = rownames(expr.rna.192)
 ```
 
-Next, we need to decide which gene to map. We will map *Lrtm1* and we need to find the column number in "expr.rna.192" that contains this gene. We will look it up in the "annotations.rna.192" data.frame.
+Next, we need to decide which gene to map. We will map *Lrtm1* and we need to find the column number in `expr.rna.192` that contains this gene. We will look it up in the `annotations.rna.192` data.frame.
 
 ```{r warning=FALSE}
 row = which(annotations.rna.192$Gene == "Lrtm1")
@@ -111,23 +124,23 @@ ensid = annotations.rna.192$EnsemblID[row]
 annotations.rna.192[row,]
 ```
 
-The last line printed out the annotation data for Lrtm1. What chromosome is Lrtm1 on?  And what Mb position?
+The last line printed out the annotation data for *Lrtm1*. What chromosome is *Lrtm1* on?  And what Mb position?
 
-We can see that the Ensembl ID for *Lrtm1* is `r annotations.rna.192$EnsemblID[row]`. Next we need to find that column in "expr.rna.192".
+We can see that the Ensembl ID for *Lrtm1* is `r annotations.rna.192$EnsemblID[row]`. Next we need to find that column in `expr.rna.192`.
 
 ```{r warning=FALSE}
 pheno.col = which(colnames(expr.rna.192) == ensid)
 colnames(expr.rna.192)[pheno.col]
 ```
 
-The main function for linkage mapping, in which we regress the phenotype on the haplotype probabilities, is called "scanone()". scanone() uses the sample IDs in the phenotype, covariates, probs and kinship matrices to line up the samples. This means that sample IDs are required in the rownames of all of these objects.
+The main function for linkage mapping, in which we regress the phenotype on the haplotype probabilities, is called `scanone()`. `scanone()` uses the sample IDs in the phenotype, covariates, probabilities and kinship matrices to line up the samples. This means that sample IDs are required in the rownames of all of these objects.
 
 ```{r warning=FALSE}
 qtl = scanone(pheno = expr.rna.192, pheno.col = pheno.col, probs = probs.192, K = K.LOCO.192,
              addcovar = covar, snps = snps.64K)
 ```
 
-This produces a doqtl object that contains the LOD scores and the founder allele effects. Next, we plot the genome scan.
+This produces a DOQTL object that contains the LOD scores and the founder allele effects. Next, we plot the genome scan.
 
 ```{r warning=FALSE}
 plot(qtl, main = paste(ensid, "Lrtm1"))
@@ -140,7 +153,7 @@ load("/data/eQTL/eQTL_perms.Rdata")
 thr = quantile(perms, 0.95)
 ```
 
-This is the distribution of the maximum LOD scores across the permutations. The red line is the 95th percentile of the distribution. LOD scores that are above this threshold will occur by change 5% of the time. We call this an alpha = 0.05 genome-wide threshold.
+This is the distribution of the maximum LOD scores across the permutations. The red line is the 95th percentile of the distribution. LOD scores that are above this threshold will occur by chance 5% of the time. We call this an alpha = 0.05 genome-wide threshold.
 
 ```{r warning=FALSE}
 hist(perms, breaks = 20)
@@ -153,16 +166,16 @@ Let's add the 0.05 threshold to the QTL plot.
 plot(qtl, main = paste(ensid, "Lrtm1"), sig.thr = thr)
 ```
 
-We can see that two peaks cross the threshold, one on Chr 7 and one on Chr 14. Let's look more closely at the peak on Chr 14. The mapping model produces an estimate of the effect of each of the eight founder alleles. We can plot these on one chromosome using "coefplot()".
+We can see that two peaks cross the threshold, one on Chr 7 and one on Chr 14. Let's look more closely at the peak on Chr 14. The mapping model produces an estimate of the effect of each of the eight founder alleles. We can plot these on one chromosome using `coefplot()`.
 
 
 ```{r warning=FALSE}
 coefplot(qtl, chr = 14, main = paste(ensid, "Lrtm1"))
 ```
 
-Each of the eight colored lines in the top plot represent the effect of one of the eight founders. The LOD plot is shown on the bottom. At the peak near 30Mb, the allele effects split into two groups. DO mice that carry the PWK/PhJ or WSB/EiJ alleles have lower *Lrtm1* expression than other DO mice. Look to the right near 60 Mb. The founder effects separate from each other.  But is this spilt significant? What would you use to decide if there is another peak at 60 Mb?
+Each of the eight colored lines in the top plot represents the effect of one of the eight founders. The LOD plot is shown on the bottom. At the peak near 30Mb, the allele effects split into two groups. DO mice that carry the PWK/PhJ or WSB/EiJ alleles have lower *Lrtm1* expression than other DO mice. Look to the right near 60 Mb. The founder effects separate from each other.  But is this split significant? What would you use to decide if there is another peak at 60 Mb?
 
-*Lrtm1* is located on Chr 14 at 29 Mb. Notice that the peak on Chr 14 is very close to this location. We call this a "local-eQTL" because the QTL peak is co-located with the gene itself.
+*Lrtm1* is located on Chr 14 at 29 Mb. Notice that the peak on Chr 14 is very close to this location. We call this a *local eQTL* because the QTL peak is co-located with the gene itself.
 
 Next, let's look at the founder effects for the peak on Chr 7.
 
@@ -170,13 +183,12 @@ Next, let's look at the founder effects for the peak on Chr 7.
 coefplot(qtl, chr = 7, main = paste(ensid, "Lrtm1"))
 ```
 
-The peaks here is wider and the pattern of allele effects is less clear.  When a peak is located far from the gene, we call this a "distant eQTL".
+The peaks here is wider and the pattern of allele effects is less clear.  When a peak is located far from the gene, we call this a *distant eQTL*.
 
 Next, we can use the haplotype reconstructions to impute the DO founder SNPs onto DO genomes. We do this by taking SNPs from the [Sanger Mouse Genomes Project](http://www.sanger.ac.uk/resources/mouse/genomes/) and pasting them into the haplotype blocks for each DO mouse.
 
-![DO impute SNPs](./DO.impute.founders.png)
 
-Although we genotyped the DO mice at ~77,000 markers, we now have 40 million SNPs in the DO mice. We can use these to perform association mapping at each SNP. While it is possible to perform genome-wide association mapping, this requires more time than we have in this tutorial. Here will will perform association mapping in the region of the local eQTL for *Lrtm1* on Chr 14. To do this, we will "assoc.map()", which takes a set of arguments similar to "scanone()".
+Although we genotyped the DO mice at ~77,000 markers, we now have 40 million SNPs in the DO mice. We can use these to perform association mapping at each SNP. While it is possible to perform genome-wide association mapping, this requires more time than we have in this tutorial. Here will will perform association mapping in the region of the local eQTL for *Lrtm1* on Chr 14. To do this, we will use  `assoc.map()`, which takes a set of arguments similar to `scanone()`.
 
 ```{r warning=FALSE}
 assoc = assoc.map(pheno = expr.rna.192, pheno.col = pheno.col, probs = probs.192, K = K.LOCO.192[[14]],
@@ -186,7 +198,7 @@ tmp = assoc.plot(assoc, thr = 10, show.sdps = TRUE, highlight = "Lrtm1")
 
 There are three panels in the association mapping plot. The top panel shows the minor allele frequency for selected SNPs, the middle panel shows the LOD scores for all SNPs, and the bottom panel shows the genes in the interval. We colored SNPs with LOD scores over 10 in red and then plotted the minor allele for each of these SNPs. A LOD of 10 is arbitrary in this case, but it allows us to highlight the most significant SNPs. Which two strains contribute the minor allele for the high LOD SNPs? How do these strains relate to the ones in the founder effects plot above?
 
-## Mapping your favorite gene (that is expressed in the liver)
+### Mapping your favorite gene (that is expressed in the liver)
 
 Next, you will map a gene of your choosing. Pick a gene and see if it is in the data set.
 
@@ -209,11 +221,11 @@ Try to modify the QTL mapping code from *Lrtm1* to perform the following tasks:
 5. Perform association mapping near the highest QTL peak .
 6. Create an association mapping plot with your favorite gene highlighed (if it is in the QTL interval).
 
-## eQTL Analysis in Bulk
+### eQTL Analysis in Bulk
 
-Expression data often contains thousands of transcripts. In these examples using 192 samples, each call to "scanone()" takes about 1 minute.  There are `r ncol(expr.rna.192)` genes in this data set. `r ncol(expr.rna.192)` x 1 minute / 60 minutes / hour = 418.5 hours = 17.4 days.  This would be time consuming on a single computer. However, many institutions have computing clusters and cloud based computing services allow you to run many jobs at the same time. 
+Expression data often contains thousands of transcripts. In these examples using 192 samples, each call to `scanone()` takes about 1 minute.  There are `r ncol(expr.rna.192)` genes in this data set. `r ncol(expr.rna.192)` x 1 minute / 60 minutes / hour = 418.5 hours = 17.4 days.  This would be time consuming on a single computer. However, many institutions have computing clusters and cloud based computing services allow you to run many jobs at the same time. 
 
-In order to make the task manageable, we transform each expression trait using a rankZ (or inverse normal) transformation. We then estimate significance thresholds using permutations orof a single rankZ transformed phenotype. Since all expression traits have the same distribution, we can use the same threshold for all genes.
+In order to make the task manageable, we transform each expression trait using a rankZ (or inverse normal) transformation. We then estimate significance thresholds using permutations of a single rankZ transformed phenotype. Since all expression traits have the same distribution, we can use the same threshold for all genes.
 
 Below, we include code that maps all traits and write the DOQTL objects out to binary Rdata files.
 
@@ -258,7 +270,7 @@ for(i in 1:ncol(expr.rna.192)) {
 } # for(i)
 ```
 
-At this point, you will have a directory containing thousands of *.rds files. Each file will contain a DOQTL object with the QTL information for one gene. Next, we loop through the files, harvest the maximum autosomal QTL for each gene and will produce a table of results. We will also plot the genome scan and the coefficient plot for the chromosome with the maximum LOD score.
+At this point, you will have a directory containing thousands of `*.rds` files. Each file will contain a DOQTL object with the QTL information for one gene. Next, we loop through the files, harvest the maximum autosomal QTL for each gene and will produce a table of results. We will also plot the genome scan and the coefficient plot for the chromosome with the maximum LOD score.
 
 ```{r eval=FALSE}
 # Loadin DOQTL.
@@ -472,10 +484,10 @@ h5ls(h5filename)
 
 Here is a listing of what is in the HDF5 file.
 
-```{r eval = FALSE,warnings=FALSE}
+```{r eval = FALSE, warnings=FALSE}
 library(rhdf5)
 h5ls("eQTL_for_viewer.h5")
 ```
 
-We take the output of these two scripts, "eQTL_summary.csv" and "eQTL_for_viewer.h5", and place them in a directory. Then we can launch an [eQTL viewer](http://cgd.jax.org/ShortCourse2015/eqtl).
+We take the output of these two scripts, `eQTL_summary.csv` and `eQTL_for_viewer.h5`, and place them in a directory. Then we can launch an [eQTL viewer](http://cgd.jax.org/ShortCourse2015/eqtl).
 
